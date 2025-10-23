@@ -1,0 +1,236 @@
+"use client";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  FileSpreadsheet,
+  FileText,
+  FileType,
+  Search
+} from 'lucide-react';
+import React, { useState } from 'react';
+
+// Sample data
+const generateData = () => {
+  const services = ['Refill', 'Transfer'];
+  const statuses = ['Completed', 'Pending'];
+  const data = [];
+
+  for (let i = 0; i < 24; i++) {
+    data.push({
+      id: i + 1,
+      no: '01',
+      patientName: 'Jane Cooper',
+      pharmacyName: 'Medplus Health',
+      serviceType: services[i % 2],
+      date: '15/01/2025',
+      assignedDriver: 'Mark Taylor',
+      status: i % 3 === 0 ? 'Pending' : 'Completed'
+    });
+  }
+  return data;
+};
+
+export default function HealthcareSchedule() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateRange, setDateRange] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const allData = generateData();
+
+  // Filter data
+  const filteredData = allData.filter(item => {
+    const matchesSearch = searchQuery === '' ||
+      Object.values(item).some(val =>
+        val.toString().toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    const matchesStatus = statusFilter === 'all' ||
+      item.status.toLowerCase() === statusFilter.toLowerCase();
+    return matchesSearch && matchesStatus;
+  });
+
+  // Paginate data
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentData = filteredData.slice(startIndex, endIndex);
+
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 4) {
+        pages.push(1, 2, 3, 4, 5, '...', totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+      }
+    }
+    return pages;
+  };
+
+  return (
+    <div className="">
+      <div className="bg-white rounded-lg shadow-sm">
+        {/* Header */}
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-xl font-semibold text-gray-900">
+              Schedule Essential Healthcare Services
+            </h1>
+            <div className="flex gap-2">
+              <Button variant="outline" size="icon" className="h-9 w-9 bg-green-50 hover:bg-green-100 border-green-200">
+                <FileSpreadsheet className="h-4 w-4 text-green-600" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-9 w-9 bg-green-50 hover:bg-green-100 border-green-200">
+                <FileText className="h-4 w-4 text-green-600" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-9 w-9 bg-red-50 hover:bg-red-100 border-red-200">
+                <FileType className="h-4 w-4 text-red-600" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="flex gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Type Something"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-gray-50 border-gray-200"
+              />
+            </div>
+            <Select value={dateRange} onValueChange={setDateRange}>
+              <SelectTrigger className="w-[180px] bg-gray-50 border-gray-200">
+                <SelectValue placeholder="Date Range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Dates</SelectItem>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="week">This Week</SelectItem>
+                <SelectItem value="month">This Month</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[180px] bg-gray-50 border-gray-200">
+                <SelectValue placeholder="Status: All" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Status: All</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">No</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Patient Name</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Pharmacy Name</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Service Type</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Date</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Assigned Driver</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentData.map((item, index) => (
+                <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
+                  <td className="px-6 py-4 text-sm text-gray-900">{item.no}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{item.patientName}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{item.pharmacyName}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{item.serviceType}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{item.date}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{item.assignedDriver}</td>
+                  <td className="px-6 py-4">
+                    <Badge
+                      variant={item.status === 'Completed' ? 'secondary' : 'default'}
+                      className={
+                        item.status === 'Completed'
+                          ? 'bg-cyan-100 text-cyan-700 hover:bg-cyan-100'
+                          : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-100'
+                      }
+                    >
+                      {item.status}
+                    </Badge>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Footer */}
+        <div className="p-6 border-t border-gray-200 flex items-center justify-between">
+          <div className="text-sm text-gray-600">
+            Showing {startIndex + 1} to {Math.min(endIndex, filteredData.length)} of {filteredData.length} entries
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className="text-gray-600"
+            >
+              Prev
+            </Button>
+
+            {getPageNumbers().map((page, index) => (
+              <React.Fragment key={index}>
+                {page === '...' ? (
+                  <span className="px-3 py-1 text-gray-400">...</span>
+                ) : (
+                  <Button
+                    variant={currentPage === page ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => typeof page === 'number' && setCurrentPage(page)}
+                    className={
+                      currentPage === page
+                        ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                        : 'text-gray-600'
+                    }
+                  >
+                    {String(page).padStart(2, '0')}
+                  </Button>
+                )}
+              </React.Fragment>
+            ))}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className="text-gray-600"
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

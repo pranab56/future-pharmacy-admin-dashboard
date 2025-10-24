@@ -1,5 +1,4 @@
 "use client";
-import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -8,18 +7,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import React, { useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
-
-import { RiAlarmWarningLine } from "react-icons/ri";
 import { Report } from "@/components/reports/report.type";
-import {
-  useGetSupportQuery,
-  useDeleteSupportMutation,
-} from "@/redux/Apis/supportApi";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import useToast from "@/hooks/useToast";
+import {
+  useDeleteSupportMutation,
+  useGetSupportQuery,
+} from "@/redux/Apis/supportApi";
+import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import DeleteConfirmationDialog from "../confirmation/deleteConfirmationDialog";
 const ReportTable: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);

@@ -11,13 +11,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Ban,
-  CheckCircle2,
-  FileSpreadsheet,
-  FileText,
-  FileType,
   Search
 } from 'lucide-react';
+import Image from 'next/image';
 import React, { useState } from 'react';
 
 // Define interfaces
@@ -33,7 +29,6 @@ interface PrescriptionRequest {
 
 // Sample data
 const generateData = (): PrescriptionRequest[] => {
-  const statuses: PrescriptionRequest['status'][] = ['Approved', 'Pending', 'Rejected'];
   const data: PrescriptionRequest[] = [];
 
   for (let i = 0; i < 24; i++) {
@@ -122,14 +117,14 @@ export default function RefillPrescriptionRequests() {
               Refill Prescription Requests
             </h1>
             <div className="flex gap-2">
-              <Button variant="outline" size="icon" className="h-9 w-9 bg-green-50 hover:bg-green-100 border-green-200">
-                <FileText className="h-4 w-4 text-green-600" />
+              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                <Image src="/icons/refill-prescription/csv.png" alt="view details" width={28} height={28} />
               </Button>
-              <Button variant="outline" size="icon" className="h-9 w-9 bg-green-50 hover:bg-green-100 border-green-200">
-                <FileSpreadsheet className="h-4 w-4 text-green-600" />
+              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                <Image src="/icons/refill-prescription/docs.png" alt="view details" width={28} height={28} />
               </Button>
-              <Button variant="outline" size="icon" className="h-9 w-9 bg-red-50 hover:bg-red-100 border-red-200">
-                <FileType className="h-4 w-4 text-red-600" />
+              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                <Image src="/icons/refill-prescription/pdf.png" alt="view details" width={28} height={28} className='w-8 h-8' />
               </Button>
             </div>
           </div>
@@ -203,10 +198,10 @@ export default function RefillPrescriptionRequests() {
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
                       <button className="p-1 hover:bg-gray-100 rounded">
-                        <CheckCircle2 className="h-5 w-5 text-gray-600" />
+                        <Image src="/icons/users/success.png" alt="view details" width={20} height={20} />
                       </button>
                       <button className="p-1 hover:bg-gray-100 rounded">
-                        <Ban className="h-5 w-5 text-gray-600" />
+                        <Image src="/icons/users/block.png" alt="view details" width={20} height={20} />
                       </button>
                     </div>
                   </td>

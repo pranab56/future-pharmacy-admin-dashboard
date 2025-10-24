@@ -11,9 +11,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Eye,
   Search
 } from 'lucide-react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 
@@ -28,7 +28,6 @@ interface Driver {
 
 // Sample data
 const generateData = (): Driver[] => {
-  const statuses: Driver['status'][] = ['Available', 'On Delivery'];
   const data: Driver[] = [];
 
   for (let i = 0; i < 24; i++) {
@@ -156,7 +155,7 @@ export default function AllDriverList() {
                   </td>
                   <td className="px-6 py-4">
                     <button onClick={() => router.push("/drivers/driver-profile")} className="p-1 hover:bg-gray-100 cursor-pointer rounded">
-                      <Eye className="h-5 w-5 text-gray-600" />
+                      <Image src="/icons/users/view.png" alt="view details" width={20} height={20} />
                     </button>
                   </td>
                 </tr>

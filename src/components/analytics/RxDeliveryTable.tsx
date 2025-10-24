@@ -1,9 +1,9 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Receipt, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import Image from 'next/image';
 
 interface DeliveryRequest {
   requestId: string;
@@ -104,19 +104,19 @@ function RxDeliveryTable() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-semibold">Latest Rx Delivery Request</h1>
-        
+
         <div className="flex items-center gap-3">
           <span className="text-base font-medium text-gray-800">Quick Actions:</span>
-          <Button onClick={handleAssignDriver} className="bg-purple-600 hover:bg-purple-700 text-white py-5">
-            <Plus className="w-4 h-4 mr-2" />
+          <Button onClick={handleAssignDriver} className=" text-white py-5">
+            <Image src="/icons/overview/assign.png" alt="Assign Driver" width={20} height={20} />
             Assign Driver
           </Button>
           <Button onClick={handleViewPayment} variant="outline" className="bg-[#F4ECF3] hover:bg-[#F4ECF4] py-5">
-            <Receipt className="w-4 h-4 mr-2" />
+            <Image src="/icons/overview/view-payment.png" alt="Assign Driver" width={20} height={20} />
             View Payments
           </Button>
           <Button onClick={handleDownload} variant="outline" className="bg-[#F4ECF3] hover:bg-[#F4ECF4] py-5">
-            <Download className="w-4 h-4 mr-2" />
+            <Image src="/icons/overview/download.png" alt="Assign Driver" width={20} height={20} />
             Download
           </Button>
         </div>
@@ -172,7 +172,7 @@ function RxDeliveryTable() {
                   {request.driverAssigned}
                 </td>
                 <td className="py-4 px-4">
-                  <Badge 
+                  <Badge
 
                     className={`${getStatusVariant(
                       request.currentStatus

@@ -16,8 +16,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { format } from 'date-fns';
-import { CalendarIcon, Eye, Plus, Search } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { CalendarIcon, Search } from 'lucide-react';
+import Image from 'next/image';
 import React, { useState } from 'react';
 
 interface PrescriptionRequest {
@@ -33,7 +33,6 @@ const PrescriptionRequestsTable = () => {
   const [pharmacyFilter, setPharmacyFilter] = useState<string>('all');
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const router = useRouter();
 
   // Sample data - all entries are the same as in the image
   const requests: PrescriptionRequest[] = Array(10).fill({
@@ -193,11 +192,11 @@ const PrescriptionRequestsTable = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                          <Eye className="w-5 h-5 text-gray-600" />
+                        <button className="p-2 hover:bg-gray-100 cursor-pointer rounded-lg transition-colors">
+                          <Image src="/icons/users/view.png" alt="view details" width={20} height={20} />
                         </button>
-                        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                          <Plus className="w-5 h-5 text-gray-600" />
+                        <button className="p-2 hover:bg-gray-100 cursor-pointer rounded-lg transition-colors">
+                          <Image src="/icons/prescription/assignPlus.png" alt="view details" width={20} height={20} />
                         </button>
                       </div>
                     </td>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Eye, Plus, Search, Trash2, X } from 'lucide-react';
+import Image from 'next/image';
 import { useState } from 'react';
 import { Button } from '../../../../components/ui/button';
 
@@ -106,9 +107,11 @@ const PatientManagement = () => {
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
         <div className="flex items-start justify-between">
           <div className="flex gap-6">
-            <img
+            <Image
               src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop"
               alt="Profile"
+              width={1000}
+              height={1000}
               className="w-24 h-24 rounded-full object-cover"
             />
             <div className="grid grid-cols-3 gap-8">

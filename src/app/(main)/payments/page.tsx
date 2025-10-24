@@ -10,7 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Download, FileSpreadsheet, FileText, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
+import Image from 'next/image';
 import { useMemo, useState } from 'react';
 
 // Define interfaces
@@ -25,7 +26,6 @@ interface Transaction {
 
 // Mock data - all transactions have the same ID as shown in the image
 const generateTransactions = (): Transaction[] => {
-  const statuses: Transaction['status'][] = ['Successful', 'Failed', 'Refunded'];
   const transactions: Transaction[] = [];
 
   for (let i = 0; i < 24; i++) {
@@ -124,14 +124,14 @@ export default function TransactionsList() {
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-semibold text-gray-900">Transactions list</h1>
             <div className="flex gap-2">
-              <Button variant="outline" size="icon" className="h-10 w-10 bg-green-50 border-green-200 hover:bg-green-100">
-                <FileSpreadsheet className="h-5 w-5 text-green-600" />
+              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                <Image src="/icons/refill-prescription/csv.png" alt="view details" width={28} height={28} />
               </Button>
-              <Button variant="outline" size="icon" className="h-10 w-10 bg-green-50 border-green-200 hover:bg-green-100">
-                <FileText className="h-5 w-5 text-green-600" />
+              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                <Image src="/icons/refill-prescription/docs.png" alt="view details" width={28} height={28} />
               </Button>
-              <Button variant="outline" size="icon" className="h-10 w-10 bg-red-50 border-red-200 hover:bg-red-100">
-                <Download className="h-5 w-5 text-red-600" />
+              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                <Image src="/icons/refill-prescription/pdf.png" alt="view details" width={28} height={28} className='w-8 h-8' />
               </Button>
             </div>
           </div>

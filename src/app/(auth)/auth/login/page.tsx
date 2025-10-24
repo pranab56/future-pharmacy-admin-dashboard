@@ -81,8 +81,7 @@ export default function LoginPage() {
                 className="o w-52 h-auto rounded-r-3xl py-2"
               />
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">Login to Your Account</h2>
-                <p className="text-gray-600 mb-8">Optimus Health Solutions</p>
+                <h2 className="text-2xl font-medium text-gray-800 mb-4">Login to Your Account</h2>
               </div>
 
             </div>
@@ -159,7 +158,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#8E4585] hover:bg-[#8E4585] text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#8E4585] cursor-pointer hover:bg-[#8E4585] text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Loading...' : 'Login'}
             </button>

@@ -16,7 +16,7 @@ import { DownloadIcon, FileTextIcon } from 'lucide-react';
 import { useState } from 'react';
 
 // Mock data
-const transferRequests = Array.from({ length: 24 }, (_, i) => ({
+const transferRequests = Array.from({ length: 24 }, () => ({
   no: '01',
   patientName: 'Jane Cooper',
   transferFrom: 'Medplus',
@@ -55,7 +55,7 @@ export default function PrescriptionTransferPage() {
     const pages = [];
     const maxVisiblePages = 5;
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+   const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
@@ -79,8 +79,8 @@ export default function PrescriptionTransferPage() {
             onClick={() => handlePageChange(i)}
             isActive={i === currentPage}
             className={`${i === currentPage
-                ? 'bg-purple-700 text-white hover:bg-purple-800'
-                : 'hover:bg-gray-100'
+              ? 'bg-purple-700 text-white hover:bg-purple-800'
+              : 'hover:bg-gray-100'
               }`}
           >
             {String(i).padStart(2, '0')}

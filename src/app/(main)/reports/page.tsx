@@ -1,8 +1,10 @@
 "use client";
 
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowRightLeft, Calendar, File, FileSpreadsheet, FileText, Pill, UserCheck, Users } from 'lucide-react';
+import { ArrowRightLeft, Calendar, Pill, UserCheck, Users } from 'lucide-react';
+import Image from 'next/image';
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Button } from '../../../components/ui/button';
 
 // Sales Trend Data
 const salesData = [
@@ -121,15 +123,15 @@ const Dashboard = () => {
           <Card className="bg-[#8E4585] border-0">
             <CardContent className="p-6">
               <div className="flex justify-center items-center gap-4 h-full">
-                <div className="bg-white rounded-xl p-4 hover:scale-110 transition-transform cursor-pointer">
-                  <FileSpreadsheet className="w-8 h-8 text-emerald-500" />
-                </div>
-                <div className="bg-white rounded-xl p-4 hover:scale-110 transition-transform cursor-pointer">
-                  <FileText className="w-8 h-8 text-red-500" />
-                </div>
-                <div className="bg-white rounded-xl p-4 hover:scale-110 transition-transform cursor-pointer">
-                  <File className="w-8 h-8 text-emerald-500" />
-                </div>
+                <Button variant="outline" size="icon" className="h-16 w-16 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                  <Image src="/icons/refill-prescription/csv.png" alt="view details" width={40} height={40} />
+                </Button>
+                <Button variant="outline" size="icon" className="h-16 w-16 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                  <Image src="/icons/refill-prescription/docs.png" alt="view details" width={40} height={40} />
+                </Button>
+                <Button variant="outline" size="icon" className="h-16 w-16 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                  <Image src="/icons/refill-prescription/pdf.png" alt="view details" width={40} height={40} className='w-8 h-8' />
+                </Button>
               </div>
             </CardContent>
           </Card>

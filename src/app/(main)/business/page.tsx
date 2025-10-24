@@ -8,8 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Check, FileDown, FileSpreadsheet, FileText, Search, X } from 'lucide-react';
+import { Search } from 'lucide-react';
+import Image from 'next/image';
 import React, { ReactElement, ReactNode, useState } from 'react';
+import { Button } from '../../../components/ui/button';
 
 // Tab Component Props
 interface TabsProps {
@@ -68,7 +70,7 @@ const Tabs = ({ value, onValueChange, children }: TabsProps) => {
     <div className="w-full">
       {React.Children.map(children, child =>
         React.isValidElement(child)
-          ? React.cloneElement(child as ReactElement<any>, { value, onValueChange })
+          ? React.cloneElement(child as ReactElement<TabsListProps | TabsTriggerProps | TabsContentProps>, { value, onValueChange })
           : child
       )}
     </div>
@@ -80,7 +82,7 @@ const TabsList = ({ children, value, onValueChange }: TabsListProps) => {
     <div className="flex border-b border-gray-200 mb-6">
       {React.Children.map(children, child =>
         React.isValidElement(child)
-          ? React.cloneElement(child as ReactElement<any>, { value, onValueChange })
+          ? React.cloneElement(child as ReactElement<TabsTriggerProps>, { value, onValueChange })
           : child
       )}
     </div>
@@ -116,7 +118,7 @@ const PharmacyTab = () => {
   const [dateRange, setDateRange] = useState<string>('');
   const [status, setStatus] = useState<string>('all');
 
-  const pharmacyData: PharmacyData[] = Array(10).fill(null).map((_, idx) => ({
+  const pharmacyData: PharmacyData[] = Array(10).fill(null).map(() => ({
     no: '01',
     pharmacyName: 'Medplus Health',
     licenseNumber: '#123458957',
@@ -177,8 +179,8 @@ const PharmacyTab = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {pharmacyData.map((item, idx) => (
-              <tr key={idx} className="hover:bg-gray-50">
+            {pharmacyData.map((item, index) => (
+              <tr key={index} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.no}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.pharmacyName}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.licenseNumber}</td>
@@ -187,11 +189,11 @@ const PharmacyTab = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.contactPerson}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <div className="flex gap-2">
-                    <button className="p-1 text-green-600 hover:text-green-700">
-                      <Check className="w-5 h-5" />
+                    <button className="p-1 text-green-600 cursor-pointer hover:text-green-700">
+                      <Image src="/icons/users/success.png" alt="view details" width={20} height={20} />
                     </button>
-                    <button className="p-1 text-red-600 hover:text-red-700">
-                      <X className="w-5 h-5" />
+                    <button className="p-1 text-red-600 cursor-pointer hover:text-red-700">
+                      <Image src="/icons/users/block.png" alt="view details" width={20} height={20} />
                     </button>
                   </div>
                 </td>
@@ -227,7 +229,7 @@ const DriverTab = () => {
   const [dateRange, setDateRange] = useState<string>('');
   const [status, setStatus] = useState<string>('all');
 
-  const driverData: DriverData[] = Array(10).fill(null).map((_, idx) => ({
+  const driverData: DriverData[] = Array(10).fill(null).map(() => ({
     no: '01',
     name: 'Jin Cooper',
     email: 'info@example.com',
@@ -286,8 +288,8 @@ const DriverTab = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {driverData.map((item, idx) => (
-              <tr key={idx} className="hover:bg-gray-50">
+            {driverData.map((item, index) => (
+              <tr key={index} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.no}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.email}</td>
@@ -299,11 +301,11 @@ const DriverTab = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <div className="flex gap-2">
-                    <button className="p-1 text-green-600 hover:text-green-700">
-                      <Check className="w-5 h-5" />
+                    <button className="p-1 text-green-600 cursor-pointer hover:text-green-700">
+                      <Image src="/icons/users/success.png" alt="view details" width={20} height={20} />
                     </button>
-                    <button className="p-1 text-red-600 hover:text-red-700">
-                      <X className="w-5 h-5" />
+                    <button className="p-1 text-red-600 cursor-pointer hover:text-red-700">
+                      <Image src="/icons/users/block.png" alt="view details" width={20} height={20} />
                     </button>
                   </div>
                 </td>
@@ -339,7 +341,7 @@ const InvestorTab = () => {
   const [dateRange, setDateRange] = useState<string>('');
   const [status, setStatus] = useState<string>('all');
 
-  const investorData: InvestorData[] = Array(10).fill(null).map((_, idx) => ({
+  const investorData: InvestorData[] = Array(10).fill(null).map(() => ({
     no: '01',
     investorName: 'Jane Cooper',
     companyName: 'Medplus Health',
@@ -396,19 +398,19 @@ const InvestorTab = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {investorData.map((item, idx) => (
-              <tr key={idx} className="hover:bg-gray-50">
+            {investorData.map((item, index) => (
+              <tr key={index} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.no}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.investorName}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.companyName}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.email}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <div className="flex gap-2">
-                    <button className="p-1 text-green-600 hover:text-green-700">
-                      <Check className="w-5 h-5" />
+                    <button className="p-1 text-green-600 cursor-pointer hover:text-green-700">
+                      <Image src="/icons/users/success.png" alt="view details" width={20} height={20} />
                     </button>
-                    <button className="p-1 text-red-600 hover:text-red-700">
-                      <X className="w-5 h-5" />
+                    <button className="p-1 text-red-600 cursor-pointer hover:text-red-700">
+                      <Image src="/icons/users/block.png" alt="view details" width={20} height={20} />
                     </button>
                   </div>
                 </td>
@@ -462,15 +464,15 @@ export default function App() {
             </Tabs>
           </div>
           <div className="flex gap-2">
-            <button className="p-2 bg-green-100 hover:bg-green-200 rounded">
-              <FileSpreadsheet className="w-5 h-5 text-green-600" />
-            </button>
-            <button className="p-2 bg-green-100 hover:bg-green-200 rounded">
-              <FileText className="w-5 h-5 text-green-600" />
-            </button>
-            <button className="p-2 bg-red-100 hover:bg-red-200 rounded">
-              <FileDown className="w-5 h-5 text-red-600" />
-            </button>
+            <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+              <Image src="/icons/refill-prescription/csv.png" alt="view details" width={28} height={28} />
+            </Button>
+            <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+              <Image src="/icons/refill-prescription/docs.png" alt="view details" width={28} height={28} />
+            </Button>
+            <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+              <Image src="/icons/refill-prescription/pdf.png" alt="view details" width={28} height={28} className='w-8 h-8' />
+            </Button>
           </div>
         </div>
 

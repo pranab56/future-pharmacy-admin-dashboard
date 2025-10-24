@@ -115,7 +115,7 @@ export default function VerifyOTPPage() {
               <div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-3">Account Recovery</h2>
                 <p className="text-gray-600 text-sm mb-4">
-                  To help keep your account safe, House Finder wants to make sure it's really you trying to sign in.
+                  To help keep your account safe, House Finder wants to make sure it&apos;s really you trying to sign in.
                 </p>
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">Get a Verification Code</h3>
                 <p className="text-gray-600 text-xs">
@@ -155,14 +155,14 @@ export default function VerifyOTPPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#8E4585] hover:bg-[#7a3a71] text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#8E4585] hover:bg-[#7a3a71] cursor-pointer text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Verifying...' : 'Verified'}
             </button>
 
             {/* Resend Link */}
             <div className="text-center text-sm text-gray-600">
-              Didn't receive the code?{' '}
+              Didn&apos;t receive the code?{' '}
               <button
                 type="button"
                 onClick={handleResend}

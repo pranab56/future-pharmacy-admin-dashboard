@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Calendar, Shield, User } from 'lucide-react';
+import Image from 'next/image';
 import { useState } from 'react';
 
 export default function UserProfilePage() {
@@ -79,9 +80,11 @@ export default function UserProfilePage() {
             <div className="flex gap-6">
               {/* Profile Image */}
               <div className="w-32 h-32 rounded-full overflow-hidden flex-shrink-0">
-                <img
+                <Image
                   src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop"
                   alt="Profile"
+                  width={1000}
+                  height={1000}
                   className="w-full h-full object-cover"
                 />
               </div>

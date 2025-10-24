@@ -64,7 +64,7 @@ export default function DriverListPage() {
     const pages = [];
     const maxVisiblePages = 5;
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
@@ -88,8 +88,8 @@ export default function DriverListPage() {
             onClick={() => handlePageChange(i)}
             isActive={i === currentPage}
             className={`${i === currentPage
-                ? 'bg-purple-700 text-white hover:bg-purple-800'
-                : 'hover:bg-gray-100'
+              ? 'bg-purple-700 text-white hover:bg-purple-800'
+              : 'hover:bg-gray-100'
               }`}
           >
             {String(i).padStart(2, '0')}
@@ -174,8 +174,8 @@ export default function DriverListPage() {
                     <Badge
                       variant={driver.status === 'Available' ? 'default' : 'secondary'}
                       className={`${driver.status === 'Available'
-                          ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                          : 'bg-green-100 text-green-800 hover:bg-green-200'
+                        ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                        : 'bg-green-100 text-green-800 hover:bg-green-200'
                         }`}
                     >
                       {driver.status}

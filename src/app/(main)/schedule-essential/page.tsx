@@ -11,17 +11,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  FileSpreadsheet,
-  FileText,
-  FileType,
   Search
 } from 'lucide-react';
+import Image from 'next/image';
 import React, { useState } from 'react';
 
 // Sample data
 const generateData = () => {
   const services = ['Refill', 'Transfer'];
-  const statuses = ['Completed', 'Pending'];
   const data = [];
 
   for (let i = 0; i < 24; i++) {
@@ -93,14 +90,14 @@ export default function HealthcareSchedule() {
               Schedule Essential Healthcare Services
             </h1>
             <div className="flex gap-2">
-              <Button variant="outline" size="icon" className="h-9 w-9 bg-green-50 hover:bg-green-100 border-green-200">
-                <FileSpreadsheet className="h-4 w-4 text-green-600" />
+              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                <Image src="/icons/refill-prescription/csv.png" alt="view details" width={28} height={28} />
               </Button>
-              <Button variant="outline" size="icon" className="h-9 w-9 bg-green-50 hover:bg-green-100 border-green-200">
-                <FileText className="h-4 w-4 text-green-600" />
+              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                <Image src="/icons/refill-prescription/docs.png" alt="view details" width={28} height={28} />
               </Button>
-              <Button variant="outline" size="icon" className="h-9 w-9 bg-red-50 hover:bg-red-100 border-red-200">
-                <FileType className="h-4 w-4 text-red-600" />
+              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                <Image src="/icons/refill-prescription/pdf.png" alt="view details" width={28} height={28} className='w-8 h-8' />
               </Button>
             </div>
           </div>

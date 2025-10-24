@@ -4,7 +4,8 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Package, Star } from 'lucide-react';
+import { Star } from 'lucide-react';
+import Image from 'next/image';
 import { useState } from 'react';
 
 const DeliveryDriverProfile = () => {
@@ -40,8 +41,8 @@ const DeliveryDriverProfile = () => {
         <button
           key={i}
           onClick={() => setCurrentPage(i)}
-          className={`px-3 py-2 text-sm font-medium rounded ${i === currentPage
-            ? 'bg-purple-600 text-white'
+          className={`px-3 py-2 text-sm font-medium cursor-pointer rounded ${i === currentPage
+            ? 'bg-[#8E4585] text-white'
             : 'text-gray-600 hover:bg-gray-100'
             }`}
         >
@@ -91,9 +92,11 @@ const DeliveryDriverProfile = () => {
               <div className="flex gap-6">
                 {/* Profile Picture */}
                 <div className="w-24 h-24 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
-                  <img
+                  <Image
                     src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop"
                     alt="Profile"
+                    width={1000}
+                    height={1000}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -153,8 +156,8 @@ const DeliveryDriverProfile = () => {
             <div className="grid grid-cols-2 gap-6">
               <Card className='px-10'>
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Package className="w-6 h-6 text-purple-600" />
+                  <div className="w-16 h-16 rounded-lg flex items-center justify-center">
+                    <Image src="/icons/driver/total-deliveries.png" alt="view details" width={50} height={50} />
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Total Deliveries Completed</p>
@@ -167,7 +170,7 @@ const DeliveryDriverProfile = () => {
               <Card className='px-10'>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Star className="w-6 h-6 text-purple-600" />
+                    <Star className="w-6 h-6 text-[#8E4585]" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Average Rating</p>

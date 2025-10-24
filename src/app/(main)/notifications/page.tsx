@@ -24,6 +24,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
 import { ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
+import Image from 'next/image';
 import { useState } from 'react';
 
 // Define interfaces
@@ -41,7 +42,6 @@ const NotificationSystem = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [dateRange, setDateRange] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Form state
   const [audience, setAudience] = useState<string>('patients');
@@ -111,7 +111,7 @@ const NotificationSystem = () => {
               onClick={() => setIsDialogOpen(true)}
               className=" text-white"
             >
-              <span className="mr-2">📧</span> Send New Notification
+              <Image src="/icons/overview/assign.png" alt="view details" width={20} height={20} /> Send New Notification
             </Button>
           </div>
           <div className="flex gap-4 pt-5">

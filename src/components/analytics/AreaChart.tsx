@@ -3,7 +3,6 @@
 import { Card } from "@/components/ui/card";
 import {
   CartesianGrid,
-  Legend,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -18,6 +17,40 @@ interface ActivityData {
   failed: number;
 }
 
+// Import Recharts types
+// type LegendPayload = {
+//   value: string;
+//   color: string;
+//   dataKey?: string;
+//   type?: string;
+//   payload?: {
+//     strokeDasharray?: string;
+//   };
+// };
+
+// type LegendProps = {
+//   payload?: readonly LegendPayload[];
+//   verticalAlign?: 'top' | 'middle' | 'bottom';
+//   align?: 'left' | 'center' | 'right';
+//   iconSize?: number;
+//   iconType?: 'line' | 'square' | 'circle' | 'cross' | 'diamond' | 'star' | 'triangle' | 'wye';
+//   layout?: 'horizontal' | 'vertical';
+//   formatter?: (value: string, entry: LegendPayload, index: number) => React.ReactNode;
+// };
+
+// Proper type for CustomDot props from Recharts
+interface CustomDotProps {
+  cx?: number;
+  cy?: number;
+  stroke?: string;
+  strokeWidth?: number;
+  r?: number;
+  fill?: string;
+  payload?: ActivityData;
+  dataKey?: string;
+  value?: number;
+}
+
 function SystemActivityChart() {
   const activityData: ActivityData[] = [
     { day: "Mon", successful: 65, failed: 55 },
@@ -29,11 +62,11 @@ function SystemActivityChart() {
     { day: "Sun", successful: 48, failed: 38 },
   ];
 
-  const CustomDot = (props: any) => {
-    const { cx, cy, stroke, payload, dataKey, index } = props;
+  const CustomDot = (props: CustomDotProps) => {
+    const { cx, cy, stroke, payload, dataKey } = props;
 
     // Only show dot on Thursday for successful deliveries
-    if (dataKey === "successful" && payload.day === "Thu") {
+    if (dataKey === "successful" && payload?.day === "Thu") {
       return (
         <g>
           <circle
@@ -51,24 +84,29 @@ function SystemActivityChart() {
     return null;
   };
 
-  const renderLegend = (props: any) => {
-    const { payload } = props;
-    return (
-      <div className="flex items-center justify-center gap-6 mt-4">
-        {payload.map((entry: any, index: number) => (
-          <div key={`legend-${index}`} className="flex items-center gap-2">
-            <span
-              className="inline-block w-3 h-3 rounded-full"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-sm font-medium text-gray-700">
-              {entry.value}
-            </span>
-          </div>
-        ))}
-      </div>
-    );
-  };
+  // const renderLegend = (props: LegendProps) => {
+  //   const { payload } = props;
+
+  //   if (!payload || payload.length === 0) {
+  //     return null;
+  //   }
+
+  //   return (
+  //     <div className="flex items-center justify-center gap-6 mt-4">
+  //       {payload.map((entry: LegendPayload, index: number) => (
+  //         <div key={`legend-${index}`} className="flex items-center gap-2">
+  //           <span
+  //             className="inline-block w-3 h-3 rounded-full"
+  //             style={{ backgroundColor: entry.color }}
+  //           />
+  //           <span className="text-sm font-medium text-gray-700">
+  //             {entry.value}
+  //           </span>
+  //         </div>
+  //       ))}
+  //     </div>
+  //   );
+  // };
 
   return (
     <Card className="p-6 h-full">
@@ -104,7 +142,7 @@ function SystemActivityChart() {
               content={<CustomTooltip />}
               cursor={{ stroke: "#e5e7eb", strokeWidth: 1, strokeDasharray: "5 5" }}
             />
-            <Legend content={renderLegend} />
+            {/* <Legend content={renderLegend} /> */}
             <Line
               type="monotone"
               dataKey="successful"

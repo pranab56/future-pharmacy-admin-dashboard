@@ -1,17 +1,17 @@
 "use client";
 
-import { useEffect } from "react";
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { useSocket } from "@/contexts/SocketContext";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
-  markAsRead,
   markAllAsRead,
+  markAsRead,
   removeNotification,
 } from "@/redux/slices/notificationSlice";
+import { useCallback, useEffect } from "react"; // 👈 Import useCallback
 
 import {
-  useReadSingleNotificationMutation,
   useReadAllNotificationsMutation,
+  useReadSingleNotificationMutation,
 } from "@/redux/Apis/notificationApi";
 
 export const useSocketNotifications = () => {
@@ -22,43 +22,30 @@ export const useSocketNotifications = () => {
   );
   const { isAuthenticated } = useAppSelector((state) => state.auth);
 
-  // API mutations for read operations
   const [readSingleNotification] = useReadSingleNotificationMutation();
   const [readAllNotifications] = useReadAllNotificationsMutation();
 
-  // Note: Removed duplicate notification handling from this hook
-  // Socket context is already handling incoming notifications
-  // This hook only provides read operations and state access
-
-  // Use API calls for read operations
   const markNotificationAsRead = async (notificationId: string) => {
     try {
-      // Find the notification to get the real MongoDB _id
       const notification = notifications.find((n) => n.id === notificationId);
       const realId = notification?._id || notificationId;
 
       console.log("Marking notification as read:", { notificationId, realId });
 
-      // Call API to mark notification as read using the real MongoDB _id
       await readSingleNotification({ id: realId }).unwrap();
-      // Update local state after successful API call
       dispatch(markAsRead(notificationId));
     } catch (error) {
-      //   console.error("Failed to mark notification as read:", error);
-      // Still update local state for better UX even if API fails
+      console.log(error);
       dispatch(markAsRead(notificationId));
     }
   };
 
   const markAllNotificationsAsRead = async () => {
     try {
-      // Call API to mark all notifications as read
       await readAllNotifications({}).unwrap();
-      // Update local state after successful API call
       dispatch(markAllAsRead());
     } catch (error) {
       console.error("Failed to mark all notifications as read:", error);
-      // Still update local state for better UX even if API fails
       dispatch(markAllAsRead());
     }
   };
@@ -70,18 +57,18 @@ export const useSocketNotifications = () => {
     }
   };
 
-  const requestNotificationHistory = () => {
+  // ✅ Wrap in useCallback to stabilize reference
+  const requestNotificationHistory = useCallback(() => {
     if (socket && isConnected) {
       socket.emit("get_notification_history");
     }
-  };
+  }, [socket, isConnected]); // Dependencies: socket and isConnected
 
-  // Request notification history when connected
   useEffect(() => {
     if (isConnected && isAuthenticated) {
       requestNotificationHistory();
     }
-  }, [isConnected, isAuthenticated]);
+  }, [isConnected, isAuthenticated, requestNotificationHistory]); // Now safe!
 
   return {
     notifications,

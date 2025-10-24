@@ -1,10 +1,11 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import { Calendar, IdCard, Users, DollarSign } from "lucide-react";
+import Image from 'next/image';
+import { ReactNode } from 'react';
 
 interface StatCardProps {
-  icon: React.ReactNode;
+  icon: string | ReactNode;
   value: string | number;
   label: string;
   bgColor: string;
@@ -22,6 +23,13 @@ function StatCard({
   iconColor,
   textColor,
 }: StatCardProps) {
+  const renderIcon = () => {
+    if (typeof icon === 'string') {
+      return <Image src={icon} height={27} width={27} alt={label} />;
+    }
+    return <div className={iconColor}>{icon}</div>;
+  };
+
   return (
     <Card className={`${bgColor} border-none shadow-sm p-0`}>
       <div className="p-6">
@@ -29,7 +37,7 @@ function StatCard({
           <div
             className={`${iconBgColor} w-14 h-14 rounded-full flex items-center justify-center`}
           >
-            <div className={iconColor}>{icon}</div>
+            {renderIcon()}
           </div>
           <div className="text-3xl font-bold text-gray-900">{value}</div>
         </div>
@@ -42,7 +50,7 @@ function StatCard({
 function DashboardStats() {
   const stats = [
     {
-      icon: <Calendar className="w-6 h-6" />,
+      icon: "/icons/overview/incoming.png",
       value: 25,
       label: "Incoming Requests",
       bgColor: "bg-[#FFDEE7]",
@@ -51,7 +59,7 @@ function DashboardStats() {
       textColor: "text-pink-600",
     },
     {
-      icon: <IdCard className="w-6 h-6" />,
+      icon: "/icons/overview/driver.png",
       value: 15,
       label: "Active Drivers",
       bgColor: "bg-[#D6F2E4]",
@@ -60,7 +68,7 @@ function DashboardStats() {
       textColor: "text-emerald-600",
     },
     {
-      icon: <Users className="w-6 h-6" />,
+      icon: "/icons/overview/active-users.png",
       value: 152,
       label: "Active Users",
       bgColor: "bg-[#FFF0D9]",
@@ -69,7 +77,7 @@ function DashboardStats() {
       textColor: "text-amber-600",
     },
     {
-      icon: <DollarSign className="w-6 h-6" />,
+      icon: "/icons/overview/today-payment.png",
       value: "$1,250",
       label: "Today's Payments",
       bgColor: "bg-[#DEF6F8]",

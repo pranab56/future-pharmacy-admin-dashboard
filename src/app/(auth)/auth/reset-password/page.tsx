@@ -100,7 +100,7 @@ export default function ResetPasswordPage() {
               <div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-3">Create New Password</h2>
                 <p className="text-gray-600 text-sm">
-                  To help keep your account safe, House Finder wants to make sure it's really you trying to sign in.
+                  To help keep your account safe, House Finder wants to make sure it&apos;s really you trying to sign in.
                 </p>
               </div>
             </div>
@@ -205,7 +205,7 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#8E4585] hover:bg-[#7a3a71] text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#8E4585] hover:bg-[#7a3a71] cursor-pointer text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Changing Password...' : 'Change Password'}
             </button>

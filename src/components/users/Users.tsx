@@ -9,22 +9,15 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { Ban, CalendarIcon, Check, Eye, Plus, Search, X } from 'lucide-react';
+import { Ban, CalendarIcon, Search, X } from 'lucide-react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ReactNode, useState } from 'react';
 import { Button } from '../ui/button';
 import { Calendar } from '../ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
-// Type definitions
-interface ButtonProps {
-  children: ReactNode;
-  onClick?: () => void;
-  variant?: 'default' | 'outline' | 'ghost';
-  className?: string;
-  disabled?: boolean;
-  type?: 'button' | 'submit' | 'reset';
-}
+
 
 interface DialogProps {
   open: boolean;
@@ -293,7 +286,7 @@ export default function PatientManagement() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-gray-900">All Users</h1>
           <Button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 bg-[#8E4585] hover:bg-[#8E4585] cursor-pointer">
-            <Plus size={20} />
+            <Image src="/icons/overview/assign.png" alt="Assign Driver" width={20} height={20} />
             Add New Patient
           </Button>
         </div>
@@ -327,7 +320,7 @@ export default function PatientManagement() {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-100 border-b border-gray-200">
-                <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">Patient ID</th>
+                <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">User ID</th>
                 <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">Patient Name</th>
                 <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">Phone</th>
                 <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">Email</th>
@@ -336,7 +329,7 @@ export default function PatientManagement() {
               </tr>
             </thead>
             <tbody>
-              {currentPatients.map((patient, index) => (
+              {currentPatients.map((patient) => (
                 <tr key={patient.id} className="border-b border-gray-200 hover:bg-gray-50">
                   <td className="py-4 px-4 text-sm text-gray-900">{patient.id}</td>
                   <td className="py-4 px-4 text-sm text-gray-900">{patient.name}</td>
@@ -350,16 +343,16 @@ export default function PatientManagement() {
                   <td className="py-4 px-4">
                     <div className="flex gap-2">
                       <button onClick={() => handlePatient(patient.name)} className="p-2 cursor-pointer hover:bg-gray-100 rounded-md transition-colors">
-                        <Eye size={18} className="text-gray-600" />
+                        <Image src="/icons/users/view.png" alt="view details" width={20} height={20} />
                       </button>
-                      <button className="p-2 hover:bg-gray-100 cursor-pointer rounded-md transition-colors">
-                        <Check size={18} className="text-gray-600" />
+                      <button className="p-2 hover:bg-gray-100 rounded-md transition-colors">
+                        <Image src="/icons/users/success.png" alt="success icon" width={20} height={20} />
                       </button>
                       <button
                         className="p-2 hover:bg-gray-100 cursor-pointer rounded-md transition-colors"
                         onClick={() => handleReject(patient)}
                       >
-                        <Ban size={18} className="text-gray-600" />
+                        <Image src="/icons/users/block.png" alt="block icon" width={20} height={20} />
                       </button>
                     </div>
                   </td>

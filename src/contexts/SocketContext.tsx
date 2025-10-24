@@ -1,22 +1,23 @@
 "use client";
 
+import { socketUrl } from "@/redux/baseUrl";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import {
+  addNotification,
+  setConnectionStatus,
+  setError,
+  setLoading,
+} from "@/redux/slices/notificationSlice";
+import getAuthIdFromToken from "@/utils/jwtDecode";
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useRef,
   useState,
 } from "react";
 import { io, Socket } from "socket.io-client";
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import {
-  setConnectionStatus,
-  addNotification,
-  setError,
-  setLoading,
-} from "@/redux/slices/notificationSlice";
-import { socketUrl } from "@/redux/baseUrl";
-import getAuthIdFromToken from "@/utils/jwtDecode";
 
 interface SocketContextType {
   socket: Socket | null;
@@ -43,7 +44,48 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
 
-  const connect = () => {
+  const disconnect = useCallback(() => {
+    if (socket) {
+      console.log("Socket: Manually disconnecting...");
+      socket.disconnect();
+      setSocket(null);
+      setIsConnected(false);
+      dispatch(setConnectionStatus(false));
+
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+    }
+  }, [socket, dispatch]);
+
+  const scheduleReconnect = useCallback(() => {
+    if (reconnectAttempts.current >= maxReconnectAttempts) {
+      console.log("Socket: Max reconnection attempts reached");
+      dispatch(setError("Connection lost. Please refresh the page."));
+      return;
+    }
+
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+    }
+
+    const delay = Math.min(
+      1000 * Math.pow(2, reconnectAttempts.current),
+      30000
+    );
+    console.log(
+      `Socket: Scheduling reconnect in ${delay}ms (attempt ${reconnectAttempts.current + 1
+      })`
+    );
+
+    reconnectTimeoutRef.current = setTimeout(() => {
+      reconnectAttempts.current += 1;
+      // We'll handle reconnection in the connect function
+    }, delay);
+  }, [dispatch]);
+
+  const connect = useCallback(() => {
     if (!isAuthenticated || !accessToken || !authId) {
       console.log("Socket: Cannot connect - not authenticated");
       return;
@@ -152,49 +194,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     });
 
     setSocket(newSocket);
-  };
-
-  const disconnect = () => {
-    if (socket) {
-      console.log("Socket: Manually disconnecting...");
-      socket.disconnect();
-      setSocket(null);
-      setIsConnected(false);
-      dispatch(setConnectionStatus(false));
-
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-        reconnectTimeoutRef.current = null;
-      }
-    }
-  };
-
-  const scheduleReconnect = () => {
-    if (reconnectAttempts.current >= maxReconnectAttempts) {
-      console.log("Socket: Max reconnection attempts reached");
-      dispatch(setError("Connection lost. Please refresh the page."));
-      return;
-    }
-
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-    }
-
-    const delay = Math.min(
-      1000 * Math.pow(2, reconnectAttempts.current),
-      30000
-    );
-    console.log(
-      `Socket: Scheduling reconnect in ${delay}ms (attempt ${
-        reconnectAttempts.current + 1
-      })`
-    );
-
-    reconnectTimeoutRef.current = setTimeout(() => {
-      reconnectAttempts.current += 1;
-      connect();
-    }, delay);
-  };
+  }, [isAuthenticated, accessToken, authId, socket?.connected, dispatch, scheduleReconnect]);
 
   // Auto-connect when authenticated
   useEffect(() => {
@@ -207,7 +207,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     return () => {
       disconnect();
     };
-  }, [isAuthenticated, accessToken, authId]);
+  }, [isAuthenticated, accessToken, authId, connect, disconnect]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -215,7 +215,6 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
-      disconnect();
     };
   }, []);
 

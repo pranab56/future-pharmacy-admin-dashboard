@@ -1,4 +1,4 @@
-import React from "react";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardAction,
@@ -6,12 +6,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { TbFileSearch } from "react-icons/tb";
-import { LuCalendar } from "react-icons/lu";
 import { CgLoadbarDoc } from "react-icons/cg";
-import { Button } from "@/components/ui/button";
+import { LuCalendar } from "react-icons/lu";
 import { RiDeleteBin6Line } from "react-icons/ri";
-function RecentArticles({ recentArticles }: { recentArticles: unknown[] }) {
+import { TbFileSearch } from "react-icons/tb";
+
+// Define the type for an article
+interface Article {
+  title: string;
+  date: string;
+}
+
+function RecentArticles({ recentArticles }: { recentArticles: Article[] }) {
   return (
     <Card>
       <CardHeader className="flex  sm:flex-row sm:items-center justify-between gap-2">

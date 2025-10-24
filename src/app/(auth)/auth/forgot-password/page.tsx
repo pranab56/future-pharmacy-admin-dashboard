@@ -107,7 +107,7 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={isLoading || isSuccess}
-              className="w-full bg-[#8E4585] hover:bg-[#7a3a71] text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#8E4585] hover:bg-[#7a3a71] cursor-pointer text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Sending...' : isSuccess ? 'OTP Sent!' : 'Send OTP'}
             </button>

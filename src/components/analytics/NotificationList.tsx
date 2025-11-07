@@ -60,7 +60,7 @@ function RecentArticles({ recentArticles }: { recentArticles: Article[] }) {
               </div>
             </div>
             {/* Buttons */}
-            <div className="flex flex-row  items-stretch md:items-end gap-2 w-full md:w-auto">
+            <div className="flex flex-row items-stretch md:items-end gap-2 w-full md:w-auto">
               <Button className="w-full">
                 <RiDeleteBin6Line size={30} />
               </Button>

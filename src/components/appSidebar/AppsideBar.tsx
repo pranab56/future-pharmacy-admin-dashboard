@@ -43,6 +43,7 @@ const sidebars: SidebarItem[] = [
   { name: "Schedule Essential", path: "/schedule-essential", icon: Calendar },
   { name: "Business", path: "/business", icon: Calendar },
   { name: "Payments", path: "/payments", icon: CreditCard },
+  { name: "Create Blogs", path: "/blogs", icon: CreditCard },
   { name: "Notifications", path: "/notifications", icon: Bell },
   { name: "Reports", path: "/reports", icon: BarChart3 },
   { name: "Settings", path: "/settings", icon: Settings },

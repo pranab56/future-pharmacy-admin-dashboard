@@ -16,6 +16,7 @@ import {
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
+import StatCard from '../../../components/common/StatCard';
 
 // Define interfaces
 interface Driver {
@@ -94,14 +95,66 @@ export default function AllDriverList() {
     }
   };
 
+
+  const stats = [
+    {
+      icon: "/icons/overview/incoming.png",
+      value: 25,
+      label: "Incoming Requests",
+      bgColor: "bg-[#FFDEE7]",
+      iconBgColor: "bg-white",
+      iconColor: "text-pink-500",
+      textColor: "text-pink-600",
+    },
+    {
+      icon: "/icons/overview/driver.png",
+      value: 15,
+      label: "Active Drivers",
+      bgColor: "bg-[#D6F2E4]",
+      iconBgColor: "bg-white",
+      iconColor: "text-emerald-500",
+      textColor: "text-emerald-600",
+    },
+    {
+      icon: "/icons/overview/active-users.png",
+      value: 152,
+      label: "Active Users",
+      bgColor: "bg-[#FFF0D9]",
+      iconBgColor: "bg-white",
+      iconColor: "text-amber-500",
+      textColor: "text-amber-600",
+    },
+  ];
+
+
   return (
-    <div className="">
+    <div className="flex flex-col gap-5">
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {stats.map((stat, index) => (
+          <StatCard key={index} {...stat} />
+        ))}
+      </div>
+
       <div className=" bg-white rounded-lg shadow-sm">
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
-          <h1 className="text-xl font-semibold text-gray-900 mb-6">
-            All Driver List
-          </h1>
+           <div className="flex items-center justify-between mb-6">
+            <h1 className="text-xl font-semibold text-gray-900">
+              All Driver List
+            </h1>
+            <div className="flex gap-5">
+              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                <Image src="/icons/refill-prescription/csv.png" alt="view details" width={28} height={28} />
+              </Button>
+              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                <Image src="/icons/refill-prescription/docs.png" alt="view details" width={28} height={28} />
+              </Button>
+              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                <Image src="/icons/refill-prescription/pdf.png" alt="view details" width={28} height={28} className='w-8 h-8' />
+              </Button>
+            </div>
+          </div>
 
           {/* Filters */}
           <div className="flex gap-4">

@@ -6,7 +6,7 @@ import { CheckCircleIcon, ClockIcon, PackageIcon, SearchIcon, TruckIcon, UserIco
 
 export default function TrackPrescriptionPage() {
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="p-3 space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-xl font-semibold">Track Prescription Delivery</h1>

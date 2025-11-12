@@ -29,7 +29,7 @@ interface PrescriptionRequest {
   dateTime: string;
 }
 
-const PrescriptionRequestsTable = () => {
+const page = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [pharmacyFilter, setPharmacyFilter] = useState<string>('all');
@@ -310,4 +310,4 @@ const PrescriptionRequestsTable = () => {
   );
 };
 
-export default PrescriptionRequestsTable;
+export default page;

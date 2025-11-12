@@ -37,6 +37,7 @@ const sidebars: SidebarItem[] = [
   { name: "Overview", path: "/", icon: LayoutDashboard },
   { name: "Users", path: "/users", icon: Users },
   { name: "Prescription Req...", path: "/prescription-requests", icon: FileText },
+  { name: "Pharmacy Request", path: "/pharmacy-request", icon: FileText },
   { name: "Drivers", path: "/drivers", icon: Car },
   { name: "Refill a Prescription", path: "/refill-prescription", icon: RefreshCw },
   { name: "Transfer a Prescr...", path: "/transfer-prescription", icon: ArrowRightLeft },
@@ -58,7 +59,7 @@ export default function OptimusSidebar() {
     return pathname.startsWith(path);
   };
 
-  return (
+return (
     <Sidebar className="border-none">
       <SidebarContent className="bg-[#9c4a8f] text-white">
         <SidebarGroup>

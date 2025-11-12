@@ -27,7 +27,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+
 import { cn } from '@/lib/utils';
+
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { format } from 'date-fns';
@@ -52,7 +54,7 @@ interface BlogCardProps {
   blog: Blog;
   onEdit: (blog: Blog) => void;
   onDelete: (blog: Blog) => void;
-}
+};
 
 // ✅ Fixed Tiptap Editor Component (SSR-safe + fixed height + scroll)
 const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange }) => {

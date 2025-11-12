@@ -71,6 +71,7 @@ export default function PrescriptionTransferRequests() {
 
   return (
     <div className="">
+
       <div className="">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -113,7 +114,7 @@ export default function PrescriptionTransferRequests() {
               <h1 className="text-xl font-semibold text-gray-900">
                 Prescription Transfer Requests
               </h1>
-              <div className="flex gap-2">
+              <div className="flex gap-5">
                 <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
                   <Image src="/icons/refill-prescription/csv.png" alt="view details" width={28} height={28} />
                 </Button>

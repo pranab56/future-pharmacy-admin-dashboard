@@ -7,8 +7,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { DownloadIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
+
+  const router = useRouter();
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -82,7 +86,7 @@ export default function Home() {
                     <SelectItem value="driver3">Driver 3</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button className="mt-4 w-full">Assign Driver</Button>
+                <Button onClick={() => router.push("/prescription-requests/driver-tracking")} className="mt-4 w-full">Assign Driver</Button>
               </div>
 
               {/* Change Status */}

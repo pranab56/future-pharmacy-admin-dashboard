@@ -11,6 +11,7 @@ import {
 import { Search } from 'lucide-react';
 import Image from 'next/image';
 import React, { ReactElement, ReactNode, useState } from 'react';
+import StatCard from '../../../components/common/StatCard';
 import { Button } from '../../../components/ui/button';
 
 // Tab Component Props
@@ -127,8 +128,11 @@ const PharmacyTab = () => {
     contactPerson: 'Jane Cooper'
   }));
 
+
+
   return (
-    <div className=''>
+    <div className='flex flex-col gap-5'>
+
       <div className="flex gap-4 mb-6">
         <div className="flex-1 relative w-6/12">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -444,49 +448,90 @@ const InvestorTab = () => {
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('pharmacy');
 
-  return (
-    <div className="p-6 shadow bg-white rounded-lg">
-      <div className="">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex gap-8">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList value={activeTab} onValueChange={setActiveTab}>
-                <TabsTrigger tabValue="pharmacy" value={activeTab} onValueChange={setActiveTab}>
-                  Pharmacy
-                </TabsTrigger>
-                <TabsTrigger tabValue="driver" value={activeTab} onValueChange={setActiveTab}>
-                  Driver
-                </TabsTrigger>
-                <TabsTrigger tabValue="investor" value={activeTab} onValueChange={setActiveTab}>
-                  Investor
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
-              <Image src="/icons/refill-prescription/csv.png" alt="view details" width={28} height={28} />
-            </Button>
-            <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
-              <Image src="/icons/refill-prescription/docs.png" alt="view details" width={28} height={28} />
-            </Button>
-            <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
-              <Image src="/icons/refill-prescription/pdf.png" alt="view details" width={28} height={28} className='w-8 h-8' />
-            </Button>
-          </div>
-        </div>
+  const stats = [
+    {
+      icon: "/icons/overview/incoming.png",
+      value: 25,
+      label: "Incoming Requests",
+      bgColor: "bg-[#FFDEE7]",
+      iconBgColor: "bg-white",
+      iconColor: "text-pink-500",
+      textColor: "text-pink-600",
+    },
+    {
+      icon: "/icons/overview/driver.png",
+      value: 15,
+      label: "Active Drivers",
+      bgColor: "bg-[#D6F2E4]",
+      iconBgColor: "bg-white",
+      iconColor: "text-emerald-500",
+      textColor: "text-emerald-600",
+    },
+    {
+      icon: "/icons/overview/active-users.png",
+      value: 152,
+      label: "Active Users",
+      bgColor: "bg-[#FFF0D9]",
+      iconBgColor: "bg-white",
+      iconColor: "text-amber-500",
+      textColor: "text-amber-600",
+    },
+  ];
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsContent tabValue="pharmacy" value={activeTab}>
-            <PharmacyTab />
-          </TabsContent>
-          <TabsContent tabValue="driver" value={activeTab}>
-            <DriverTab />
-          </TabsContent>
-          <TabsContent tabValue="investor" value={activeTab}>
-            <InvestorTab />
-          </TabsContent>
-        </Tabs>
+
+  return (
+    <div className='flex flex-col gap-5'>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {stats.map((stat, index) => (
+          <StatCard key={index} {...stat} />
+        ))}
+      </div>
+
+
+      <div className="p-6 shadow bg-white rounded-lg">
+        <div className="">
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex gap-8">
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList value={activeTab} onValueChange={setActiveTab}>
+                  <TabsTrigger tabValue="pharmacy" value={activeTab} onValueChange={setActiveTab}>
+                    Pharmacy
+                  </TabsTrigger>
+                  <TabsTrigger tabValue="driver" value={activeTab} onValueChange={setActiveTab}>
+                    Driver
+                  </TabsTrigger>
+                  <TabsTrigger tabValue="investor" value={activeTab} onValueChange={setActiveTab}>
+                    Investor
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                <Image src="/icons/refill-prescription/csv.png" alt="view details" width={28} height={28} />
+              </Button>
+              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                <Image src="/icons/refill-prescription/docs.png" alt="view details" width={28} height={28} />
+              </Button>
+              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                <Image src="/icons/refill-prescription/pdf.png" alt="view details" width={28} height={28} className='w-8 h-8' />
+              </Button>
+            </div>
+          </div>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsContent tabValue="pharmacy" value={activeTab}>
+              <PharmacyTab />
+            </TabsContent>
+            <TabsContent tabValue="driver" value={activeTab}>
+              <DriverTab />
+            </TabsContent>
+            <TabsContent tabValue="investor" value={activeTab}>
+              <InvestorTab />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   );

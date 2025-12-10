@@ -15,7 +15,7 @@ import {
 import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
 
-import provideIcon from "@/utils/provideIcon";
+
 import { FiPlus } from "react-icons/fi";
 import PushNotificationAddEditModal from "./PushNotificationAddEditModal";
 import PaginationComponent from "../ui/pagination-component";
@@ -167,14 +167,14 @@ function PushNotification() {
                         className="h-8 w-8 p-0 text-white border-none shadow-none hover:bg-lime-100"
                         onClick={() => setIsModalOpen(true)}
                       >
-                        {provideIcon({ name: "edit" })}
+                        {/* {provideIcon({ name: "edit" })} */}
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         className="h-8 w-8 p-0 text-white border-none shadow-none hover:bg-red-50"
                       >
-                        {provideIcon({ name: "trash" })}
+                        {/* {provideIcon({ name: "trash" })} */}
                       </Button>
                     </div>
                   </TableCell>

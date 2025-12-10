@@ -29,7 +29,7 @@ interface PrescriptionRequest {
   dateTime: string;
 }
 
-const page = () => {
+const Page = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [pharmacyFilter, setPharmacyFilter] = useState<string>('all');
@@ -76,7 +76,6 @@ const page = () => {
 
     return pages;
   };
-
 
   const stats = [
     {
@@ -310,4 +309,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

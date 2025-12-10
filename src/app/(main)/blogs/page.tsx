@@ -34,6 +34,7 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { format } from 'date-fns';
 import { Bold, CalendarIcon, Edit, Italic, List, ListOrdered, Trash2, Upload } from 'lucide-react';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
 // Types
@@ -175,9 +176,11 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, onEdit, onDelete }) => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className={`transition-all duration-300 ${isHovered ? 'blur-sm' : ''}`}>
-        <img
+        <Image
           src={blog.image.trim() || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400'}
           alt={blog.title}
+          height={1000}
+          width={1000}
           className="w-full h-48 object-cover"
         />
         <CardContent className="p-4">
@@ -402,9 +405,11 @@ export default function BlogManagementApp() {
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
                 {image ? (
                   <div className="space-y-4">
-                    <img
+                    <Image
                       src={image}
                       alt="Preview"
+                      width={1000}
+                      height={1000}
                       className="max-h-48 mx-auto rounded object-cover"
                     />
                     <div className="flex gap-2 justify-center">

@@ -1,7 +1,11 @@
 "use client";
-import React, { useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
+import DeleteConfirmationDialog from "../confirmation/deleteConfirmationDialog";
+import { Button } from "../ui/button";
+import PaginationComponent from "../ui/pagination-component";
+import { ScrollArea } from "../ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
 import {
   Table,
@@ -12,11 +16,6 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { Button } from "../ui/button";
-import { ScrollArea } from "../ui/scroll-area";
-import provideIcon from "@/utils/provideIcon";
-import DeleteConfirmationDialog from "../confirmation/deleteConfirmationDialog";
-import PaginationComponent from "../ui/pagination-component";
 
 function MonitoringTable() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -186,13 +185,12 @@ function MonitoringTable() {
                   <TableCell className="w-1/6">{data.submissionDate}</TableCell>
                   <TableCell className="w-1/6">
                     <span
-                      className={`p-2 rounded-lg text-center font-medium text-xs inline-block w-20 ${
-                        data.status === "Active"
+                      className={`p-2 rounded-lg text-center font-medium text-xs inline-block w-20 ${data.status === "Active"
                           ? "bg-[#f6fafb] text-[#00705d]"
                           : data.status === "Pending"
-                          ? "bg-[#fdfef7] text-yellow-500"
-                          : "bg-[#fef8f8] text-red-500"
-                      }`}
+                            ? "bg-[#fdfef7] text-yellow-500"
+                            : "bg-[#fef8f8] text-red-500"
+                        }`}
                     >
                       {data.status}
                     </span>
@@ -204,7 +202,7 @@ function MonitoringTable() {
                         size="sm"
                         className="h-8 w-8 p-0 text-white border-none shadow-none hover:bg-lime-100"
                       >
-                        {provideIcon({ name: "check" })}
+                        {/* {provideIcon({ name: "check" })} */}
                       </Button>
                       <Button
                         variant="outline"
@@ -214,7 +212,7 @@ function MonitoringTable() {
                           handleDeleteClick(data.campaignId, data.organizerName)
                         }
                       >
-                        {provideIcon({ name: "trash" })}
+                        {/* {provideIcon({ name: "trash" })} */}
                       </Button>
                     </div>
                   </TableCell>

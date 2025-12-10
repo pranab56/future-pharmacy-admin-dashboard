@@ -1,8 +1,10 @@
-import MyProfileLayout from "@/components/myProfile/MyProfileLayout";
-import React from "react";
 
-function page() {
-  return <MyProfileLayout />;
-}
+const page = () => {
+  return (
+    <div>
+      THis is
+    </div>
+  );
+};
 
 export default page;

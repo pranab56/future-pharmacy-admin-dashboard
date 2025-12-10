@@ -5,20 +5,55 @@ import {
   Legend,
   Pie,
   PieChart,
-  PieLabel,
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
+import { PieLabel } from "recharts/types/polar/Pie";
 
+// Update interface to include index signature
 interface DeliveryData {
   name: string;
   value: number;
+  [key: string]: string | number; // Add index signature
 }
 
-const COLORS = {
+// Alternatively, you can extend the built-in recharts type
+// import { PieProps } from 'recharts';
+// type DeliveryData = Required<PieProps>['data'][number] & { name: string; value: number };
+
+interface COLORS_TYPE {
+  [key: string]: string;
+}
+
+const COLORS: COLORS_TYPE = {
   Completed: "#75D1A4",
   Pending: "#FCCA80",
 };
+
+interface CustomLabelProps {
+  cx?: number;
+  cy?: number;
+  midAngle?: number;
+  innerRadius?: number;
+  outerRadius?: number;
+  percent?: number;
+
+}
+
+interface LegendPayloadItem {
+  value: string;
+  color: string;
+  type?: string;
+  payload?: DeliveryData;
+
+}
+
+interface TooltipPayloadItem {
+  name?: string;
+  value?: number;
+  payload?: DeliveryData;
+
+}
 
 function DeliveriesDonutChart() {
   const deliveryData: DeliveryData[] = [
@@ -26,14 +61,9 @@ function DeliveriesDonutChart() {
     { name: "Pending", value: 25 },
   ];
 
-  const renderCustomizedLabel: PieLabel = ({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    percent,
-  }) => {
+  const renderCustomizedLabel: PieLabel = (props: CustomLabelProps) => {
+    const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props;
+
     // Add null checks for all required values
     if (
       cx === undefined ||
@@ -67,12 +97,7 @@ function DeliveriesDonutChart() {
   const CustomLegend = ({
     payload,
   }: {
-    payload?: Array<{
-      value: string;
-      color: string;
-      type?: string;
-      payload?: DeliveryData;
-    }>;
+    payload?: LegendPayloadItem[];
   }) => {
     if (!payload || payload.length === 0) {
       return null;
@@ -100,11 +125,7 @@ function DeliveriesDonutChart() {
     payload,
   }: {
     active?: boolean;
-    payload?: Array<{
-      name?: string;
-      value?: number;
-      payload?: DeliveryData;
-    }>;
+    payload?: TooltipPayloadItem[];
   }) => {
     if (active && payload && payload.length) {
       return (
@@ -147,7 +168,7 @@ function DeliveriesDonutChart() {
               {deliveryData.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
-                  fill={COLORS[entry.name as keyof typeof COLORS]}
+                  fill={COLORS[entry.name]}
                   stroke="none"
                 />
               ))}

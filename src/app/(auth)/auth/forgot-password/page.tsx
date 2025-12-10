@@ -4,20 +4,35 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
+import toast from 'react-hot-toast';
+import { useForgotEmailMutation } from '../../../../features/auth/authApi';
+
+interface ApiError {
+  data?: {
+    message?: string;
+  };
+}
+
+interface ForgotEmailResponse {
+  message?: string;
+  data?: {
+    forgetToken: string;
+  };
+}
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState<string>('');
   const [error, setError] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const router = useRouter();
+  const [forgotEmail, { isLoading }] = useForgotEmailMutation();
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError('');
 
@@ -32,16 +47,30 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    // If validation passes, proceed with OTP sending
-    setIsLoading(true);
+    try {
+      const response = await forgotEmail({ email: email }).unwrap() as ForgotEmailResponse;
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+      // Show success state
       setIsSuccess(true);
-      alert(`OTP has been sent to ${email}`);
-      router.push('/auth/verify-email');
-    }, 1500);
+
+      // Show success toast
+      toast.success(response.message || 'OTP sent successfully!');
+
+      // Redirect to OTP verification page with token
+      if (response.data?.forgetToken) {
+        // Add small delay for better UX
+        setTimeout(() => {
+          router.push(`/auth/verify-email?forgetToken=${response.data?.forgetToken}`);
+        }, 1000);
+      } else {
+        toast.error('Invalid response from server');
+      }
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.log('Forgot password error:', error);
+      toast.error(apiError?.data?.message || 'Failed to send OTP. Please try again.');
+      setIsSuccess(false);
+    }
   };
 
   return (
@@ -71,7 +100,7 @@ export default function ForgotPasswordPage() {
                 className="w-52 h-auto py-2"
               />
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">Forget Password</h2>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">Forgot Password</h2>
                 <p className="text-gray-600 text-sm">
                   Enter your registered email to receive an OTP.
                 </p>
@@ -93,10 +122,12 @@ export default function ForgotPasswordPage() {
                 onChange={(e) => {
                   setEmail(e.target.value);
                   if (error) setError('');
+                  setIsSuccess(false);
                 }}
                 placeholder="Enter your email address here..."
+                disabled={isSuccess}
                 className={`w-full px-4 py-3 border ${error ? 'border-red-500' : 'border-gray-300'
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-[#8E4585] focus:border-transparent transition-all`}
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-[#8E4585] focus:border-transparent transition-all disabled:opacity-70 disabled:cursor-not-allowed`}
               />
               {error && (
                 <p className="mt-1 text-sm text-red-500">{error}</p>
@@ -106,11 +137,20 @@ export default function ForgotPasswordPage() {
             {/* Send OTP Button */}
             <button
               type="submit"
-              disabled={isLoading || isSuccess}
+              disabled={isLoading || isSuccess || !email}
               className="w-full bg-[#8E4585] hover:bg-[#7a3a71] cursor-pointer text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Sending...' : isSuccess ? 'OTP Sent!' : 'Send OTP'}
+              {isLoading ? 'Sending OTP...' : isSuccess ? 'OTP Sent ✓' : 'Send OTP'}
             </button>
+
+            {/* Success Message */}
+            {isSuccess && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                <p className="text-sm text-green-700 text-center">
+                  OTP sent successfully! Redirecting to verification page...
+                </p>
+              </div>
+            )}
 
             {/* Back to Login Link */}
             <div className="text-center text-sm text-gray-600 mt-4">

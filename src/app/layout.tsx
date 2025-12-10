@@ -1,10 +1,8 @@
-import AuthInitializer from "@/components/AuthInitializer";
-import { SocketProvider } from "@/contexts/SocketContext";
-import ReduxProvider from "@/redux/Provider";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Toaster } from "sonner";
+import { Toaster } from "react-hot-toast";
 import "./globals.css";
+import ClientLayout from './ClientLayout';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,11 +13,6 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
-// const myFont = localFont({
-//   src: "/public/font/fonnts.com-Degular_Variable.otf",
-//   variable: "--font-degular-variable",
-// });
 
 export const metadata: Metadata = {
   title: "Peterson Dashboard",
@@ -36,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+   <html lang="en">
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="manifest" href="/site.webmanifest" />
@@ -44,18 +37,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable}   antialiased h-screen`}
       >
-        <ReduxProvider>
-          <SocketProvider>
-            <AuthInitializer />
-            {children}
-            <Toaster
-              position="top-right"
-              expand={true}
-              richColors={true}
-              closeButton={true}
-            />
-          </SocketProvider>
-        </ReduxProvider>
+        <ClientLayout>
+          {children}
+          <Toaster />
+        </ClientLayout>
       </body>
     </html>
   );

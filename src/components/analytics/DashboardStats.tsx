@@ -3,6 +3,7 @@
 import { Card } from "@/components/ui/card";
 import Image from 'next/image';
 import { ReactNode } from 'react';
+import { useDashboardTopCardQuery } from "../../features/overview/overviewApi";
 
 interface StatCardProps {
   icon: string | ReactNode;
@@ -48,10 +49,21 @@ function StatCard({
 }
 
 function DashboardStats() {
+
+  const { data, isLoading } = useDashboardTopCardQuery({});
+
+  const LoadingFc = () => {
+    return (
+      <div className="w-8 h-8 border-4 border-[#8E4484] border-t-transparent rounded-full animate-spin"></div>
+    )
+  }
+
+
+
   const stats = [
     {
       icon: "/icons/overview/incoming.png",
-      value: 25,
+      value: isLoading ? LoadingFc() : data?.data?.orderRequiest,
       label: "Incoming Requests",
       bgColor: "bg-[#FFDEE7]",
       iconBgColor: "bg-white",
@@ -60,7 +72,7 @@ function DashboardStats() {
     },
     {
       icon: "/icons/overview/driver.png",
-      value: 15,
+      value: isLoading ? LoadingFc() : data?.data?.allUsers,
       label: "Active Drivers",
       bgColor: "bg-[#D6F2E4]",
       iconBgColor: "bg-white",
@@ -69,7 +81,7 @@ function DashboardStats() {
     },
     {
       icon: "/icons/overview/active-users.png",
-      value: 152,
+      value: isLoading ? LoadingFc() : data?.data?.allActiveUsers,
       label: "Active Users",
       bgColor: "bg-[#FFF0D9]",
       iconBgColor: "bg-white",
@@ -78,7 +90,7 @@ function DashboardStats() {
     },
     {
       icon: "/icons/overview/today-payment.png",
-      value: "$1,250",
+      value: isLoading ? LoadingFc() : `$${data?.data?.todayPaymentAmount}`,
       label: "Today's Payments",
       bgColor: "bg-[#DEF6F8]",
       iconBgColor: "bg-white",

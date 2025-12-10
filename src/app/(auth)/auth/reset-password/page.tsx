@@ -3,8 +3,27 @@
 import { Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { FormEvent, useState } from 'react';
+import toast from 'react-hot-toast';
+import { useResetPasswordMutation } from '../../../../features/auth/authApi';
+
+
+interface ApiError {
+  data?: {
+    message?: string;
+  };
+}
+
+interface ResetPasswordResponse {
+  message?: string;
+}
+
+interface ResetPasswordData {
+  newPassword: string;
+  confirmPassword: string;
+  token: string;
+}
 
 export default function ResetPasswordPage() {
   const [newPassword, setNewPassword] = useState<string>('');
@@ -15,8 +34,10 @@ export default function ResetPasswordPage() {
     newPassword: '',
     confirmPassword: ''
   });
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const forgetToken = searchParams.get("forgetOtpMatchToken") || '';
+  const [resetPassword, { isLoading }] = useResetPasswordMutation();
 
   const validatePassword = (password: string): string => {
     if (!password) {
@@ -37,7 +58,7 @@ export default function ResetPasswordPage() {
     return '';
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     const newErrors = { newPassword: '', confirmPassword: '' };
 
@@ -58,18 +79,52 @@ export default function ResetPasswordPage() {
 
     // If no errors, proceed with password reset
     if (!newErrors.newPassword && !newErrors.confirmPassword) {
-      setIsLoading(true);
+      if (!forgetToken) {
+        toast.error('Invalid or missing token. Please try again.');
+        return;
+      }
 
-      // Simulate API call
-      setTimeout(() => {
-        setIsLoading(false);
-        alert('Password has been changed successfully!');
-        // Redirect to login page
+      try {
+        const resetData: ResetPasswordData = {
+          newPassword: newPassword,
+          confirmPassword: confirmPassword,
+          token: forgetToken
+        };
 
-        router.push('/auth/login');
-      }, 1500);
+        console.log(resetData);
+
+        const response = await resetPassword({
+          newPassword: newPassword,
+          confirmPassword: confirmPassword,
+          token: forgetToken
+        }).unwrap() as ResetPasswordResponse;
+        console.log('Reset password response:', response);
+
+
+        toast.success(response.message || 'Password reset successful!');
+
+        // Clear form fields
+        setNewPassword('');
+        setConfirmPassword('');
+
+        // Redirect to login after a brief delay
+        setTimeout(() => {
+          router.push('/auth/login');
+        }, 1500);
+
+      } catch (error) {
+        console.log('Reset password error:', error);
+        const apiError = error as ApiError;
+        toast.error(apiError?.data?.message || 'Password reset failed!');
+      }
     }
   };
+
+  // Check if form is valid for button state
+  const isFormValid = newPassword.length > 0 &&
+    confirmPassword.length > 0 &&
+    !errors.newPassword &&
+    !errors.confirmPassword;
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -130,6 +185,7 @@ export default function ResetPasswordPage() {
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  aria-label={showNewPassword ? "Hide password" : "Show password"}
                 >
                   {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -161,6 +217,7 @@ export default function ResetPasswordPage() {
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                 >
                   {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -204,7 +261,7 @@ export default function ResetPasswordPage() {
             {/* Change Password Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !isFormValid || !forgetToken}
               className="w-full bg-[#8E4585] hover:bg-[#7a3a71] cursor-pointer text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Changing Password...' : 'Change Password'}

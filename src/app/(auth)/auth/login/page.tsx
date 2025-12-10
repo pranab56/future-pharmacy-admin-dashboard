@@ -5,6 +5,27 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
+import toast from 'react-hot-toast';
+import { useLoginMutation } from '../../../../features/auth/authApi';
+import { saveToken } from '../../../../utils/storage';
+
+interface ApiError {
+  data?: {
+    message?: string;
+  };
+}
+
+interface LoginResponse {
+  message?: string;
+  data?: {
+    accessToken: string;
+  };
+}
+
+interface LoginCredentials {
+  email: string;
+  password: string;
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState<string>('');
@@ -14,15 +35,15 @@ export default function LoginPage() {
     email: '',
     password: ''
   });
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
+  const [Login, { isLoading }] = useLoginMutation();
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     const newErrors = { email: '', password: '' };
 
@@ -43,15 +64,37 @@ export default function LoginPage() {
 
     // If no errors, proceed with login
     if (!newErrors.email && !newErrors.password) {
-      setIsLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        setIsLoading(false);
-        alert('Login successful!');
-        router.push('/');
-      }, 1500);
+      try {
+        const credentials: LoginCredentials = {
+          email: email,
+          password: password
+        };
+
+        const response = await Login(credentials).unwrap() as LoginResponse;
+
+        // Save token to storage
+        if (response.data?.accessToken) {
+          saveToken(response.data.accessToken);
+          toast.success(response.message || 'Login successful!');
+
+          // Redirect to home page
+          router.push('/');
+        } else {
+          toast.error('No access token received');
+        }
+      } catch (error) {
+        console.log('Login error:', error);
+        const apiError = error as ApiError;
+        toast.error(apiError?.data?.message || 'Login failed! Please check your credentials.');
+      }
     }
   };
+
+  // Check if form is valid for better UX
+  const isFormValid = email.length > 0 &&
+    password.length > 0 &&
+    !errors.email &&
+    !errors.password;
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -67,25 +110,22 @@ export default function LoginPage() {
       </div>
 
       {/* Right Panel - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-gray-50 ">
+      <div className="flex-1 flex items-center justify-center p-8 bg-gray-50">
         <div className="w-full max-w-md p-8 rounded-lg bg-gray-100">
           {/* Logo and Title */}
-          <div className="text-center ">
+          <div className="text-center">
             <div className="flex flex-col items-center justify-center gap-1">
-
               <Image
                 src={"/icons/logo2.png"}
                 alt="Login illustration"
                 height={1000}
                 width={1000}
-                className="o w-52 h-auto rounded-r-3xl py-2"
+                className="w-52 h-auto rounded-r-3xl py-2"
               />
               <div>
                 <h2 className="text-2xl font-medium text-gray-800 mb-4">Login to Your Account</h2>
               </div>
-
             </div>
-
           </div>
 
           {/* Login Form */}
@@ -134,6 +174,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -148,7 +189,6 @@ export default function LoginPage() {
               <Link
                 href="/auth/forgot-password"
                 className="text-sm text-[#8E4585] hover:text-[#8E4585] font-medium"
-
               >
                 Forgot Password?
               </Link>
@@ -157,13 +197,22 @@ export default function LoginPage() {
             {/* Login Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !isFormValid}
               className="w-full bg-[#8E4585] cursor-pointer hover:bg-[#8E4585] text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Loading...' : 'Login'}
+              {isLoading ? 'Logging in...' : 'Login'}
             </button>
 
-
+            {/* Registration Link */}
+            <div className="text-center text-sm text-gray-600 mt-4">
+              Don&apos;t have an account?{' '}
+              <Link
+                href="/auth/register"
+                className="text-[#8E4585] hover:text-[#8E4585] font-medium"
+              >
+                Create Account
+              </Link>
+            </div>
           </form>
         </div>
       </div>

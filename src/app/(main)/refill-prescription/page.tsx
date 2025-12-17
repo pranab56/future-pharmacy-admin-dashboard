@@ -14,41 +14,97 @@ import {
   Search
 } from 'lucide-react';
 import Image from 'next/image';
-import React, { useState } from 'react';
-import StatCard from '../../../components/common/StatCard';
+import React, { useMemo, useState } from 'react';
+import { useGetAllrefillQuery } from '../../../features/refillTransferScheduleRequiest/refillTransferScheduleRequiest';
 
-// Define interfaces
-interface PrescriptionRequest {
-  id: number;
-  refId: string;
-  patientName: string;
-  prescription: string;
-  pharmacyName: string;
-  date: string;
-  status: 'Approved' | 'Pending' | 'Rejected';
+// Import Dialog components
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+// Define interfaces based on API response
+interface PersonalInfo {
+  first_name?: string;
+  last_name?: string;
+  fullName?: string;
+  phone: string;
+  dateOfBirth: string;
+  _id: string;
 }
 
-// Sample data
-const generateData = (): PrescriptionRequest[] => {
-  const data: PrescriptionRequest[] = [];
+interface PharmacyInfo {
+  name: string;
+  phone?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  availableDate?: any[];
+  availableTime?: any[];
+  _id: string;
+  availableDateTime?: any[];
+}
 
-  for (let i = 0; i < 24; i++) {
-    let status: PrescriptionRequest['status'];
-    if (i % 3 === 0) status = 'Approved';
-    else if (i % 3 === 1) status = 'Pending';
-    else status = 'Rejected';
+interface DeliveryInfo {
+  address: string;
+  aptUnit: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  _id: string;
+}
 
-    data.push({
-      id: i + 1,
-      refId: 'REF-1024',
-      patientName: 'Jane Cooper',
-      prescription: 'Lisinopril',
-      pharmacyName: 'CVS Pharmacy',
-      date: '15/01/2025',
-      status: status
-    });
+interface Medication {
+  medicationName: string;
+  rxNumber: string;
+  _id: string;
+}
+
+interface PrescriptionRequest {
+  _id: string;
+  requiestType: string;
+  personalInfo: PersonalInfo;
+  pharmacyInfo: PharmacyInfo;
+  deliveryInfo: DeliveryInfo;
+  medicationList: Medication[];
+  additionalNotes: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Helper function to format date
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
+};
+
+// Helper function to get patient name
+const getPatientName = (personalInfo: PersonalInfo): string => {
+  if (personalInfo.fullName) {
+    return personalInfo.fullName;
   }
-  return data;
+  if (personalInfo.first_name && personalInfo.last_name) {
+    return `${personalInfo.first_name} ${personalInfo.last_name}`;
+  }
+  return 'Unknown Patient';
+};
+
+// Helper function to get medication names
+const getMedicationNames = (medicationList: Medication[]): string => {
+  return medicationList.map(med => med.medicationName).join(', ');
+};
+
+// Helper function to format date with time
+const formatDateTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-GB') + ' ' + date.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 };
 
 export default function RefillPrescriptionRequests() {
@@ -56,20 +112,73 @@ export default function RefillPrescriptionRequests() {
   const [dateRange, setDateRange] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [selectedRequest, setSelectedRequest] = useState<PrescriptionRequest | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const itemsPerPage = 10;
 
-  const allData = generateData();
+  const { data, isLoading } = useGetAllrefillQuery({});
+
+  // Transform API data
+  const apiData = useMemo(() => {
+    if (!data || !data.data) return [];
+
+    return data.data.map((item: PrescriptionRequest) => ({
+      _id: item._id,
+      refId: `REF-${item._id.slice(-4).toUpperCase()}`, // Use last 4 chars of _id as ref
+      patientName: getPatientName(item.personalInfo),
+      prescription: getMedicationNames(item.medicationList),
+      pharmacyName: item.pharmacyInfo.name,
+      date: formatDate(item.createdAt),
+      status: item.status.charAt(0).toUpperCase() + item.status.slice(1), // Capitalize first letter
+      originalStatus: item.status,
+      originalData: item // Keep original data for future use
+    }));
+  }, [data]);
 
   // Filter data
-  const filteredData = allData.filter(item => {
-    const matchesSearch = searchQuery === '' ||
-      Object.values(item).some(val =>
-        val.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    const matchesStatus = statusFilter === 'all' ||
-      item.status.toLowerCase() === statusFilter.toLowerCase();
-    return matchesSearch && matchesStatus;
-  });
+  const filteredData = useMemo(() => {
+    if (!apiData.length) return [];
+
+    return apiData.filter(item => {
+      // Search filter
+      const matchesSearch = searchQuery === '' ||
+        Object.values(item).some(val =>
+          val.toString().toLowerCase().includes(searchQuery.toLowerCase())
+        );
+
+      // Status filter
+      const matchesStatus = statusFilter === 'all' ||
+        item.originalStatus.toLowerCase() === statusFilter.toLowerCase();
+
+      // Date range filter
+      let matchesDate = true;
+      if (dateRange !== 'all') {
+        const itemDate = new Date(item.originalData.createdAt);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        switch (dateRange) {
+          case 'today':
+            const todayStart = new Date(today);
+            const todayEnd = new Date(today);
+            todayEnd.setHours(23, 59, 59, 999);
+            matchesDate = itemDate >= todayStart && itemDate <= todayEnd;
+            break;
+          case 'week':
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - today.getDay());
+            matchesDate = itemDate >= weekStart;
+            break;
+          case 'month':
+            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            matchesDate = itemDate >= monthStart;
+            break;
+        }
+      }
+
+      return matchesSearch && matchesStatus && matchesDate;
+    });
+  }, [apiData, searchQuery, statusFilter, dateRange]);
 
   // Paginate data
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -95,58 +204,204 @@ export default function RefillPrescriptionRequests() {
     return pages;
   };
 
-  const getStatusBadgeClass = (status: PrescriptionRequest['status']): string => {
-    switch (status) {
-      case 'Approved':
+  const getStatusBadgeClass = (status: string): string => {
+    switch (status.toLowerCase()) {
+      case 'approved':
         return 'bg-green-100 text-green-700 hover:bg-green-100';
-      case 'Pending':
+      case 'pending':
         return 'bg-yellow-100 text-yellow-700 hover:bg-yellow-100';
-      case 'Rejected':
+      case 'rejected':
         return 'bg-red-100 text-red-700 hover:bg-red-100';
       default:
         return 'bg-gray-100 text-gray-700 hover:bg-gray-100';
     }
   };
 
-  const stats = [
-    {
-      icon: "/icons/overview/incoming.png",
-      value: 25,
-      label: "Incoming Requests",
-      bgColor: "bg-[#FFDEE7]",
-      iconBgColor: "bg-white",
-      iconColor: "text-pink-500",
-      textColor: "text-pink-600",
-    },
-    {
-      icon: "/icons/overview/driver.png",
-      value: 15,
-      label: "Active Drivers",
-      bgColor: "bg-[#D6F2E4]",
-      iconBgColor: "bg-white",
-      iconColor: "text-emerald-500",
-      textColor: "text-emerald-600",
-    },
-    {
-      icon: "/icons/overview/active-users.png",
-      value: 152,
-      label: "Active Users",
-      bgColor: "bg-[#FFF0D9]",
-      iconBgColor: "bg-white",
-      iconColor: "text-amber-500",
-      textColor: "text-amber-600",
-    },
-  ];
+  // Handle view details
+  const handleViewDetails = (request: PrescriptionRequest) => {
+    setSelectedRequest(request);
+    setIsDialogOpen(true);
+  };
+
+  // Handle export functions (placeholder - implement based on your needs)
+  const handleExportCSV = () => {
+    console.log('Export CSV', filteredData);
+    // Implement CSV export logic
+  };
+
+  const handleExportDocs = () => {
+    console.log('Export Docs', filteredData);
+    // Implement Docs export logic
+  };
+
+  const handleExportPDF = () => {
+    console.log('Export PDF', filteredData);
+    // Implement PDF export logic
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-gray-600">Loading prescription requests...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5">
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          {selectedRequest && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center justify-between">
+                  <span>Refill Request Details</span>
+                  <Badge
+                    variant="secondary"
+                    className={getStatusBadgeClass(selectedRequest.status)}
+                  >
+                    {selectedRequest.status.charAt(0).toUpperCase() + selectedRequest.status.slice(1)}
+                  </Badge>
+                </DialogTitle>
+                <DialogDescription>
+                  Request ID: REF-{selectedRequest._id.slice(-4).toUpperCase()}
+                </DialogDescription>
+              </DialogHeader>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {stats.map((stat, index) => (
-          <StatCard key={index} {...stat} />
-        ))}
-      </div>
+              <div className="space-y-6 py-4">
+                {/* Basic Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Basic Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Request Type</p>
+                      <p className="text-sm text-gray-900 capitalize">{selectedRequest.requiestType}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Created At</p>
+                      <p className="text-sm text-gray-900">{formatDateTime(selectedRequest.createdAt)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Last Updated</p>
+                      <p className="text-sm text-gray-900">{formatDateTime(selectedRequest.updatedAt)}</p>
+                    </div>
+                  </div>
+                </div>
 
+                {/* Personal Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Personal Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Patient Name</p>
+                      <p className="text-sm text-gray-900">{getPatientName(selectedRequest.personalInfo)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Phone</p>
+                      <p className="text-sm text-gray-900">{selectedRequest.personalInfo.phone}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Date of Birth</p>
+                      <p className="text-sm text-gray-900">{formatDate(selectedRequest.personalInfo.dateOfBirth)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pharmacy Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Pharmacy Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Pharmacy Name</p>
+                      <p className="text-sm text-gray-900">{selectedRequest.pharmacyInfo.name}</p>
+                    </div>
+                    {selectedRequest.pharmacyInfo.phone && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Pharmacy Phone</p>
+                        <p className="text-sm text-gray-900">{selectedRequest.pharmacyInfo.phone}</p>
+                      </div>
+                    )}
+                    {selectedRequest.pharmacyInfo.city && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">City</p>
+                        <p className="text-sm text-gray-900">{selectedRequest.pharmacyInfo.city}</p>
+                      </div>
+                    )}
+                    {selectedRequest.pharmacyInfo.state && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">State</p>
+                        <p className="text-sm text-gray-900">{selectedRequest.pharmacyInfo.state}</p>
+                      </div>
+                    )}
+                    {selectedRequest.pharmacyInfo.zipCode && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">ZIP Code</p>
+                        <p className="text-sm text-gray-900">{selectedRequest.pharmacyInfo.zipCode}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Delivery Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Delivery Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <p className="text-sm font-medium text-gray-500">Address</p>
+                      <p className="text-sm text-gray-900">{selectedRequest.deliveryInfo.address}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Apt/Unit</p>
+                      <p className="text-sm text-gray-900">{selectedRequest.deliveryInfo.aptUnit}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">City</p>
+                      <p className="text-sm text-gray-900">{selectedRequest.deliveryInfo.city}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">State</p>
+                      <p className="text-sm text-gray-900">{selectedRequest.deliveryInfo.state}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">ZIP Code</p>
+                      <p className="text-sm text-gray-900">{selectedRequest.deliveryInfo.zipCode}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Medication List */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Medication List</h3>
+                  <div className="space-y-3">
+                    {selectedRequest.medicationList.map((medication, index) => (
+                      <div key={medication._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">Medication {index + 1}</p>
+                          <p className="text-sm text-gray-600">{medication.medicationName}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">RX Number</p>
+                          <p className="text-sm text-gray-900 font-mono">{medication.rxNumber}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Additional Notes */}
+                {selectedRequest.additionalNotes && (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Additional Notes</h3>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-900">{selectedRequest.additionalNotes}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <div className="bg-white rounded-lg shadow-sm">
         {/* Header */}
@@ -156,14 +411,29 @@ export default function RefillPrescriptionRequests() {
               Refill Prescription Requests
             </h1>
             <div className="flex gap-5">
-              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
-                <Image src="/icons/refill-prescription/csv.png" alt="view details" width={28} height={28} />
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200"
+                onClick={handleExportCSV}
+              >
+                <Image src="/icons/refill-prescription/csv.png" alt="Export CSV" width={28} height={28} />
               </Button>
-              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
-                <Image src="/icons/refill-prescription/docs.png" alt="view details" width={28} height={28} />
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200"
+                onClick={handleExportDocs}
+              >
+                <Image src="/icons/refill-prescription/docs.png" alt="Export Docs" width={28} height={28} />
               </Button>
-              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
-                <Image src="/icons/refill-prescription/pdf.png" alt="view details" width={28} height={28} className='w-8 h-8' />
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200"
+                onClick={handleExportPDF}
+              >
+                <Image src="/icons/refill-prescription/pdf.png" alt="Export PDF" width={28} height={28} className='w-8 h-8' />
               </Button>
             </div>
           </div>
@@ -173,7 +443,7 @@ export default function RefillPrescriptionRequests() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Type Something"
+                placeholder="Search by patient name, pharmacy, medication..."
                 value={searchQuery}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                 className="pl-10 bg-gray-50 border-gray-200"
@@ -219,86 +489,103 @@ export default function RefillPrescriptionRequests() {
               </tr>
             </thead>
             <tbody>
-              {currentData.map((item, index) => (
-                <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-900">{item.refId}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{item.patientName}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{item.prescription}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{item.pharmacyName}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{item.date}</td>
-                  <td className="px-6 py-4">
-                    <Badge
-                      variant="secondary"
-                      className={getStatusBadgeClass(item.status)}
-                    >
-                      {item.status}
-                    </Badge>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex gap-2">
-                      <button className="p-1 hover:bg-gray-100 rounded">
-                        <Image src="/icons/users/success.png" alt="view details" width={20} height={20} />
-                      </button>
-                      <button className="p-1 hover:bg-gray-100 rounded">
-                        <Image src="/icons/users/block.png" alt="view details" width={20} height={20} />
-                      </button>
-                    </div>
+              {currentData.length > 0 ? (
+                currentData.map((item) => (
+                  <tr key={item._id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.refId}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.patientName}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.prescription}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.pharmacyName}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.date}</td>
+                    <td className="px-6 py-4">
+                      <Badge
+                        variant="secondary"
+                        className={getStatusBadgeClass(item.originalStatus)}
+                      >
+                        {item.status}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2">
+                        <button
+                          className="p-1 cursor-pointer hover:bg-gray-100 rounded transition-colors"
+                          onClick={() => handleViewDetails(item.originalData)}
+                          title="View details"
+                        >
+                          <Image
+                            src="/icons/users/view.png"
+                            alt="View details"
+                            width={20}
+                            height={20}
+                            className="opacity-70  hover:opacity-100"
+                          />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                    {apiData.length === 0 ? 'No prescription requests found' : 'No matching requests found'}
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-200 flex items-center justify-between">
-          <div className="text-sm text-gray-600">
-            Showing {startIndex + 1} to {Math.min(endIndex, filteredData.length)} of {filteredData.length} entries
+        {filteredData.length > 0 && (
+          <div className="p-6 border-t border-gray-200 flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              Showing {Math.min(startIndex + 1, filteredData.length)} to {Math.min(endIndex, filteredData.length)} of {filteredData.length} entries
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="text-gray-600 hover:bg-gray-100"
+              >
+                Prev
+              </Button>
+
+              {getPageNumbers().map((page, index) => (
+                <React.Fragment key={index}>
+                  {page === '...' ? (
+                    <span className="px-3 py-1 text-gray-400">...</span>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => typeof page === 'number' && setCurrentPage(page)}
+                      className={
+                        currentPage === page
+                          ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }
+                    >
+                      {String(page).padStart(2, '0')}
+                    </Button>
+                  )}
+                </React.Fragment>
+              ))}
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="text-gray-600 hover:bg-gray-100"
+              >
+                Next
+              </Button>
+            </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="text-gray-600 hover:bg-gray-100"
-            >
-              Prev
-            </Button>
-
-            {getPageNumbers().map((page, index) => (
-              <React.Fragment key={index}>
-                {page === '...' ? (
-                  <span className="px-3 py-1 text-gray-400">...</span>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => typeof page === 'number' && setCurrentPage(page)}
-                    className={
-                      currentPage === page
-                        ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }
-                  >
-                    {String(page).padStart(2, '0')}
-                  </Button>
-                )}
-              </React.Fragment>
-            ))}
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="text-gray-600 hover:bg-gray-100"
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -9,17 +9,13 @@ import {
   Tooltip,
 } from "recharts";
 import { PieLabel } from "recharts/types/polar/Pie";
+import { useDashboardTopCardQuery } from '../../features/overview/overviewApi';
 
-// Update interface to include index signature
 interface DeliveryData {
   name: string;
   value: number;
-  [key: string]: string | number; // Add index signature
+  [key: string]: string | number;
 }
-
-// Alternatively, you can extend the built-in recharts type
-// import { PieProps } from 'recharts';
-// type DeliveryData = Required<PieProps>['data'][number] & { name: string; value: number };
 
 interface COLORS_TYPE {
   [key: string]: string;
@@ -37,7 +33,6 @@ interface CustomLabelProps {
   innerRadius?: number;
   outerRadius?: number;
   percent?: number;
-
 }
 
 interface LegendPayloadItem {
@@ -45,20 +40,31 @@ interface LegendPayloadItem {
   color: string;
   type?: string;
   payload?: DeliveryData;
-
 }
 
 interface TooltipPayloadItem {
   name?: string;
   value?: number;
   payload?: DeliveryData;
-
 }
 
 function DeliveriesDonutChart() {
+  const { data, isLoading } = useDashboardTopCardQuery({});
+
+  const LoadingFc = () => {
+    return (
+      <div className="w-8 h-8 border-4 border-[#8E4484] border-t-transparent rounded-full animate-spin"></div>
+    );
+  };
+
+  // Extract data from API response with fallback to 0
+  const pending = data?.data?.orderPending || 0;
+  const completed = data?.data?.orderComplete || 0;
+
+  // Create delivery data from API response
   const deliveryData: DeliveryData[] = [
-    { name: "Completed", value: 75 },
-    { name: "Pending", value: 25 },
+    { name: "Completed", value: completed },
+    { name: "Pending", value: pending },
   ];
 
   const renderCustomizedLabel: PieLabel = (props: CustomLabelProps) => {
@@ -134,7 +140,7 @@ function DeliveriesDonutChart() {
             {payload[0].name}
           </p>
           <p className="text-sm text-gray-600">
-            Value: {payload[0].value}%
+            Orders: {payload[0].value}
           </p>
         </div>
       );
@@ -142,41 +148,66 @@ function DeliveriesDonutChart() {
     return null;
   };
 
+  // Show loading state while data is being fetched
+  if (isLoading) {
+    return (
+      <Card className="h-full p-6 flex flex-col gap-4">
+        <h1 className="text-xl font-semibold">
+          Pending vs. Completed Deliveries
+        </h1>
+        <div className="w-full h-[500px] flex items-center justify-center">
+          <LoadingFc />
+        </div>
+      </Card>
+    );
+  }
+
+  // Check if there's any data to display
+  const totalOrders = pending + completed;
+  const hasData = totalOrders > 0;
+
   return (
     <Card className="h-full p-6 flex flex-col gap-4">
       <h1 className="text-xl font-semibold">
         Pending vs. Completed Deliveries
       </h1>
       <div className="w-full h-[500px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={deliveryData}
-              cx="50%"
-              cy="45%"
-              labelLine={false}
-              label={renderCustomizedLabel}
-              outerRadius={130}
-              innerRadius={80}
-              fill="#8884d8"
-              dataKey="value"
-              strokeWidth={0}
-              startAngle={90}
-              endAngle={-270}
-              paddingAngle={0}
-            >
-              {deliveryData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={COLORS[entry.name]}
-                  stroke="none"
-                />
-              ))}
-            </Pie>
-            <Tooltip content={<CustomTooltip />} />
-            <Legend content={<CustomLegend />} />
-          </PieChart>
-        </ResponsiveContainer>
+        {hasData ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={deliveryData}
+                cx="50%"
+                cy="45%"
+                labelLine={false}
+                label={renderCustomizedLabel}
+                outerRadius={130}
+                innerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+                strokeWidth={0}
+                startAngle={90}
+                endAngle={-270}
+                paddingAngle={0}
+              >
+                {deliveryData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[entry.name]}
+                    stroke="none"
+                  />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+              <Legend content={<CustomLegend />} />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center">
+            <p className="text-gray-500 text-lg mb-4">No delivery data available</p>
+            <p className="text-gray-400 text-sm">Add orders to see pending vs. completed deliveries</p>
+          </div>
+        )}
       </div>
     </Card>
   );

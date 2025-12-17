@@ -7,17 +7,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { Ban, CalendarIcon, Search, X } from 'lucide-react';
+import { Ban, Calendar, CheckCircle, Clock, Mail, Phone, Search, Shield, Smartphone, User, XCircle } from 'lucide-react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { ReactNode, useState } from 'react';
+import toast from 'react-hot-toast';
+import { useGetAllUsersQuery, useUpdateBlockAndUnblockMutation, useViewUserDetailsQuery } from "../../features/users/usersApi";
+import { baseURL } from '../../utils/BaseURL';
 import { Button } from '../ui/button';
-import { Calendar } from '../ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-
-
 
 interface DialogProps {
   open: boolean;
@@ -46,24 +42,29 @@ interface LabelProps {
 
 interface BadgeProps {
   children: ReactNode;
-  variant?: 'default' | 'active' | 'inactive';
+  variant?: 'default' | 'active' | 'inactive' | 'admin' | 'user';
 }
 
-interface Patient {
-  id: string;
-  name: string;
-  phone: string;
+interface User {
+  _id: string;
+  profile: string;
+  first_name?: string;
+  last_name?: string;
+  fullName?: string;
   email: string;
-  status: 'Active' | 'Unactive';
-}
-
-interface FormData {
-  firstName: string;
-  lastName: string;
-  email: string;
+  role: string;
+  isActive: boolean;
   phone: string;
-  dateOfBirth: Date | null;
-  address: string;
+  twoStepVerification: boolean;
+  createdAt: string;
+  updatedAt: string;
+  gender?: string;
+  dateOfBirth?: string;
+  subscriptionId?: string | null;
+  isStripeConnectedAccount?: boolean;
+  userDeviceId?: string | null;
+  isDeleted?: boolean;
+  isSubscriberUser?: boolean;
 }
 
 // Dialog Components with Animation
@@ -111,8 +112,10 @@ const Label = ({ children, className = '' }: LabelProps) => {
 // Badge Component
 const Badge = ({ children, variant = 'default' }: BadgeProps) => {
   const variants = {
-    active: 'bg-cyan-100 text-cyan-700',
-    inactive: 'bg-gray-200 text-gray-700',
+    active: 'bg-emerald-100 text-emerald-700',
+    inactive: 'bg-red-100 text-red-700',
+    admin: 'bg-purple-100 text-purple-700',
+    user: 'bg-blue-100 text-blue-700',
     default: 'bg-gray-200 text-gray-700',
   };
 
@@ -124,70 +127,80 @@ const Badge = ({ children, variant = 'default' }: BadgeProps) => {
 };
 
 // Main Component
-export default function PatientManagement() {
-  const [showAddModal, setShowAddModal] = useState<boolean>(false);
-  const [showRejectModal, setShowRejectModal] = useState<boolean>(false);
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+export default function UserManagement() {
+  const [showBlockModal, setShowBlockModal] = useState<boolean>(false);
+  const [showUserDetailsModal, setShowUserDetailsModal] = useState<boolean>(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 10;
 
-  const router = useRouter();
+  const { data, isLoading, refetch } = useGetAllUsersQuery({});
+  const { data: userDetailsData, isLoading: userDetailsLoading } = useViewUserDetailsQuery(
+    selectedUserId || '',
+    { skip: !selectedUserId }
+  );
+  const [updateBlockAndUnblock, { isLoading: isUpdating }] = useUpdateBlockAndUnblockMutation();
 
-  const [formData, setFormData] = useState<FormData>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    dateOfBirth: null,
-    address: '',
-  });
+  // Format date to readable format
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
-  // All patients data (expanded for pagination)
-  const allPatients: Patient[] = [
-    { id: '#R78578', name: 'Jane Cooper', phone: '(406) 555-0120', email: 'deanna.curtis@example.com', status: 'Active' },
-    { id: '#R78579', name: 'John Doe', phone: '(406) 555-0121', email: 'john.doe@example.com', status: 'Unactive' },
-    { id: '#R78580', name: 'Sarah Smith', phone: '(406) 555-0122', email: 'sarah.smith@example.com', status: 'Active' },
-    { id: '#R78581', name: 'Mike Johnson', phone: '(406) 555-0123', email: 'mike.johnson@example.com', status: 'Active' },
-    { id: '#R78582', name: 'Emily Davis', phone: '(406) 555-0124', email: 'emily.davis@example.com', status: 'Unactive' },
-    { id: '#R78583', name: 'David Wilson', phone: '(406) 555-0125', email: 'david.wilson@example.com', status: 'Active' },
-    { id: '#R78584', name: 'Lisa Brown', phone: '(406) 555-0126', email: 'lisa.brown@example.com', status: 'Active' },
-    { id: '#R78585', name: 'Tom Anderson', phone: '(406) 555-0127', email: 'tom.anderson@example.com', status: 'Active' },
-    { id: '#R78586', name: 'Amy Taylor', phone: '(406) 555-0128', email: 'amy.taylor@example.com', status: 'Unactive' },
-    { id: '#R78587', name: 'Robert Martinez', phone: '(406) 555-0129', email: 'robert.martinez@example.com', status: 'Active' },
-    { id: '#R78588', name: 'Jennifer Garcia', phone: '(406) 555-0130', email: 'jennifer.garcia@example.com', status: 'Active' },
-    { id: '#R78589', name: 'William Rodriguez', phone: '(406) 555-0131', email: 'william.rodriguez@example.com', status: 'Unactive' },
-    { id: '#R78590', name: 'Jessica Lee', phone: '(406) 555-0132', email: 'jessica.lee@example.com', status: 'Active' },
-    { id: '#R78591', name: 'Michael White', phone: '(406) 555-0133', email: 'michael.white@example.com', status: 'Active' },
-    { id: '#R78592', name: 'Ashley Harris', phone: '(406) 555-0134', email: 'ashley.harris@example.com', status: 'Unactive' },
-    { id: '#R78593', name: 'Christopher Clark', phone: '(406) 555-0135', email: 'christopher.clark@example.com', status: 'Active' },
-    { id: '#R78594', name: 'Amanda Lewis', phone: '(406) 555-0136', email: 'amanda.lewis@example.com', status: 'Active' },
-    { id: '#R78595', name: 'Matthew Walker', phone: '(406) 555-0137', email: 'matthew.walker@example.com', status: 'Unactive' },
-    { id: '#R78596', name: 'Stephanie Hall', phone: '(406) 555-0138', email: 'stephanie.hall@example.com', status: 'Active' },
-    { id: '#R78597', name: 'Daniel Allen', phone: '(406) 555-0139', email: 'daniel.allen@example.com', status: 'Active' },
-    { id: '#R78598', name: 'Michelle Young', phone: '(406) 555-0140', email: 'michelle.young@example.com', status: 'Unactive' },
-    { id: '#R78599', name: 'Joshua King', phone: '(406) 555-0141', email: 'joshua.king@example.com', status: 'Active' },
-    { id: '#R78600', name: 'Rebecca Wright', phone: '(406) 555-0142', email: 'rebecca.wright@example.com', status: 'Active' },
-    { id: '#R78601', name: 'Andrew Scott', phone: '(406) 555-0143', email: 'andrew.scott@example.com', status: 'Active' },
-    { id: '#R78602', name: 'Laura Green', phone: '(406) 555-0144', email: 'laura.green@example.com', status: 'Unactive' },
-  ];
+  // Get user's full name
+  const getUserFullName = (user: User): string => {
+    if (user.first_name && user.last_name) {
+      return `${user.first_name} ${user.last_name}`;
+    }
+    return user.fullName || 'Unknown User';
+  };
 
-  // Filter patients based on search and status
-  const filteredPatients = allPatients.filter(patient => {
-    const matchesSearch = patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      patient.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      patient.phone.includes(searchQuery) ||
-      patient.id.includes(searchQuery);
-    const matchesStatus = statusFilter === 'All' || patient.status === statusFilter;
+  // Get user status display
+  const getUserStatus = (isActive: boolean): 'Active' | 'Inactive' => {
+    return isActive ? 'Active' : 'Inactive';
+  };
+
+  // Get user role display
+  const getUserRole = (role: string): string => {
+    return role.charAt(0).toUpperCase() + role.slice(1);
+  };
+
+  // Get users from API response
+  const allUsers: User[] = data?.data || [];
+
+  // Filter users based on search and status
+  const filteredUsers = allUsers.filter(user => {
+    const userName = getUserFullName(user).toLowerCase();
+    const userEmail = user.email.toLowerCase();
+    const userPhone = user.phone;
+    const userId = user._id;
+
+    const matchesSearch = userName.includes(searchQuery.toLowerCase()) ||
+      userEmail.includes(searchQuery.toLowerCase()) ||
+      userPhone.includes(searchQuery) ||
+      userId.includes(searchQuery);
+
+    const matchesStatus = statusFilter === 'All' ||
+      (statusFilter === 'Active' && user.isActive) ||
+      (statusFilter === 'Inactive' && !user.isActive);
+
     return matchesSearch && matchesStatus;
   });
 
   // Calculate pagination
-  const totalPages = Math.ceil(filteredPatients.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentPatients = filteredPatients.slice(startIndex, endIndex);
+  const currentUsers = filteredUsers.slice(startIndex, endIndex);
 
   // Generate page numbers
   const getPageNumbers = (): (number | string)[] => {
@@ -208,39 +221,31 @@ export default function PatientManagement() {
     return pages;
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleBlockUser = async (user: User) => {
+    setSelectedUser(user);
+    setShowBlockModal(true);
   };
 
-  const handleDateChange = (date: Date | undefined) => {
-    setFormData(prev => ({
-      ...prev,
-      dateOfBirth: date || null
-    }));
+  const handleViewUser = (userId: string) => {
+    setSelectedUserId(userId);
+    setShowUserDetailsModal(true);
   };
 
-  const handleSaveUser = () => {
-    console.log('Saving user:', formData);
-    setShowAddModal(false);
-    setFormData({
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      dateOfBirth: null,
-      address: '',
-    });
-  };
+  const confirmBlockUser = async () => {
+    if (!selectedUser) return;
 
-  const handleReject = (patient: Patient) => {
-    setSelectedPatient(patient);
-    setShowRejectModal(true);
-  };
+    try {
+      const response = await updateBlockAndUnblock(selectedUser._id).unwrap();
+      toast.success(response.message || 'User blocked successfully!');
+      refetch(); // Refresh the user list
+      setShowBlockModal(false);
+      setSelectedUser(null);
+    } catch (error) {
+      const err = error as { data?: { message?: string } };
 
-  const confirmReject = () => {
-    console.log('Rejecting patient:', selectedPatient);
-    setShowRejectModal(false);
-    setSelectedPatient(null);
+      console.error("Failed to update user status:", err);
+      toast.error(err.data?.message || "Failed to update user status. Please try again.");
+    }
   };
 
   // Pagination handlers
@@ -273,10 +278,23 @@ export default function PatientManagement() {
     setCurrentPage(1);
   };
 
+  // Close user details modal
+  const closeUserDetailsModal = () => {
+    setShowUserDetailsModal(false);
+    setSelectedUserId(null);
+  };
 
-  const handlePatient = (patientId: string) => {
-    console.log('Handling patient with ID:', patientId);
-    router.push(`/users/${patientId}`);
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-semibold text-gray-900">All Users</h1>
+        </div>
+        <div className="w-full flex items-center justify-center h-64">
+          <div className="w-8 h-8 border-4 border-[#8E4484] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -285,10 +303,9 @@ export default function PatientManagement() {
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-gray-900">All Users</h1>
-          <Button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 bg-[#8E4585] hover:bg-[#8E4585] cursor-pointer">
-            <Image src="/icons/overview/assign.png" alt="Assign Driver" width={20} height={20} />
-            Add New Patient
-          </Button>
+          <div className="text-sm text-gray-500">
+            Total: {allUsers.length} user{allUsers.length !== 1 ? 's' : ''}
+          </div>
         </div>
 
         {/* Search and Filter */}
@@ -296,7 +313,7 @@ export default function PatientManagement() {
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <Input
-              placeholder="Type Something"
+              placeholder="Search by name, email, phone, or ID"
               value={searchQuery}
               onChange={handleSearchChange}
               className="pl-10"
@@ -304,13 +321,13 @@ export default function PatientManagement() {
           </div>
 
           <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-[200px] h-[200px] py-5 cursor-pointer">
+            <SelectTrigger className="w-[200px] py-5 cursor-pointer">
               <SelectValue placeholder="Status: All" />
             </SelectTrigger>
             <SelectContent className='cursor-pointer'>
               <SelectItem value="All">Status: All</SelectItem>
-              <SelectItem value="Active">Status: Active</SelectItem>
-              <SelectItem value="Unactive">Status: Unactive</SelectItem>
+              <SelectItem value="Active">Active Users</SelectItem>
+              <SelectItem value="Inactive">Inactive Users</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -321,212 +338,348 @@ export default function PatientManagement() {
             <thead>
               <tr className="bg-gray-100 border-b border-gray-200">
                 <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">User ID</th>
-                <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">Patient Name</th>
+                <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">User Name</th>
                 <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">Phone</th>
                 <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">Email</th>
+                <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">Role</th>
                 <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">Status</th>
+                <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">Joined Date</th>
                 <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">Action</th>
               </tr>
             </thead>
             <tbody>
-              {currentPatients.map((patient) => (
-                <tr key={patient.id} className="border-b border-gray-200 hover:bg-gray-50">
-                  <td className="py-4 px-4 text-sm text-gray-900">{patient.id}</td>
-                  <td className="py-4 px-4 text-sm text-gray-900">{patient.name}</td>
-                  <td className="py-4 px-4 text-sm text-gray-900">{patient.phone}</td>
-                  <td className="py-4 px-4 text-sm text-gray-900">{patient.email}</td>
-                  <td className="py-4 px-4">
-                    <Badge variant={patient.status === 'Active' ? 'active' : 'inactive'}>
-                      {patient.status}
-                    </Badge>
-                  </td>
-                  <td className="py-4 px-4">
-                    <div className="flex gap-2">
-                      <button onClick={() => handlePatient(patient.name)} className="p-2 cursor-pointer hover:bg-gray-100 rounded-md transition-colors">
-                        <Image src="/icons/users/view.png" alt="view details" width={20} height={20} />
-                      </button>
-                      <button className="p-2 hover:bg-gray-100 rounded-md transition-colors">
-                        <Image src="/icons/users/success.png" alt="success icon" width={20} height={20} />
-                      </button>
-                      <button
-                        className="p-2 hover:bg-gray-100 cursor-pointer rounded-md transition-colors"
-                        onClick={() => handleReject(patient)}
-                      >
-                        <Image src="/icons/users/block.png" alt="block icon" width={20} height={20} />
-                      </button>
-                    </div>
+              {currentUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-8 text-center text-gray-500">
+                    No users found matching your criteria
                   </td>
                 </tr>
-              ))}
+              ) : (
+                currentUsers.map((user) => {
+                  const userStatus = getUserStatus(user.isActive);
+                  const userRole = getUserRole(user.role);
+
+                  return (
+                    <tr key={user._id} className="border-b border-gray-200 hover:bg-gray-50">
+                      <td className="py-4 px-4 text-sm text-gray-900 font-mono">
+                        #{user._id.slice(-8).toUpperCase()}
+                      </td>
+                      <td className="py-4 px-4 text-sm text-gray-900">
+                        {getUserFullName(user)}
+                      </td>
+                      <td className="py-4 px-4 text-sm text-gray-900">
+                        {user.phone || 'N/A'}
+                      </td>
+                      <td className="py-4 px-4 text-sm text-gray-900">
+                        {user.email}
+                      </td>
+                      <td className="py-4 px-4 text-sm text-gray-900">
+                        {userRole}
+                      </td>
+                      <td className="py-4 px-4">
+                        <Badge variant={userStatus === 'Active' ? 'active' : 'inactive'}>
+                          {userStatus}
+                        </Badge>
+                      </td>
+                      <td className="py-4 px-4 text-sm text-gray-900">
+                        {formatDate(user.createdAt)}
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleViewUser(user._id)}
+                            className="p-2 cursor-pointer hover:bg-gray-100 rounded-md transition-colors"
+                            title="View Details"
+                          >
+                            <Image src="/icons/users/view.png" alt="view details" width={20} height={20} />
+                          </button>
+                          <button
+                            className="p-2 hover:bg-gray-100 cursor-pointer rounded-md transition-colors"
+                            onClick={() => handleBlockUser(user)}
+                            title={user.isActive ? "Block User" : "Unblock User"}
+                            disabled={isUpdating}
+                          >
+                            <Image
+                              src={user.isActive ? "/icons/users/block.png" : "/icons/users/block.png"}
+                              alt={user.isActive ? "block icon" : "unblock icon"}
+                              width={20}
+                              height={20}
+                            />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-between items-center mt-6">
-          <p className="text-sm text-gray-600">
-            Showing {filteredPatients.length > 0 ? startIndex + 1 : 0} to {Math.min(endIndex, filteredPatients.length)} of {filteredPatients.length} entries
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              className="text-gray-600"
-              onClick={handlePrevPage}
-              disabled={currentPage === 1}
-            >
-              Prev
-            </Button>
-            {getPageNumbers().map((page, index) => (
+        {filteredUsers.length > 0 && (
+          <div className="flex justify-between items-center mt-6">
+            <p className="text-sm text-gray-600">
+              Showing {filteredUsers.length > 0 ? startIndex + 1 : 0} to {Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} entries
+            </p>
+            <div className="flex gap-2">
               <Button
-                key={index}
-                variant={page === currentPage ? 'default' : 'ghost'}
-                className={page === currentPage ? ' text-white' : 'text-gray-600'}
-                onClick={() => handlePageClick(page)}
-                disabled={typeof page !== 'number'}
+                variant="ghost"
+                className="text-gray-600"
+                onClick={handlePrevPage}
+                disabled={currentPage === 1}
               >
-                {page}
+                Prev
               </Button>
-            ))}
-            <Button
-              variant="ghost"
-              className="text-gray-600"
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </Button>
+              {getPageNumbers().map((page, index) => (
+                <Button
+                  key={index}
+                  variant={page === currentPage ? 'default' : 'ghost'}
+                  className={page === currentPage ? ' text-white' : 'text-gray-600'}
+                  onClick={() => handlePageClick(page)}
+                  disabled={typeof page !== 'number'}
+                >
+                  {page}
+                </Button>
+              ))}
+              <Button
+                variant="ghost"
+                className="text-gray-600"
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Add New User Modal */}
-      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-        <DialogContent>
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">Add New User</h2>
-              <p className="text-sm text-gray-600">Enter the details below to add a new user to the system.</p>
+      {/* User Details Modal */}
+      <Dialog open={showUserDetailsModal} onOpenChange={closeUserDetailsModal}>
+        <DialogContent className="max-w-2xl">
+          {userDetailsLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="w-8 h-8 border-4 border-[#8E4484] border-t-transparent rounded-full animate-spin"></div>
             </div>
-            <button
-              onClick={() => setShowAddModal(false)}
-              className="hover:bg-gray-100 p-1 rounded transition-colors"
-            >
-              <X size={24} className="text-gray-600" />
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>First Name</Label>
-                <Input
-                  name="firstName"
-                  placeholder="Enter your first name here..."
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                />
+          ) : userDetailsData?.data ? (
+            <>
+              <div className="flex justify-between items-start mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">User Details</h2>
+                <button
+                  onClick={closeUserDetailsModal}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
-              <div>
-                <Label>Last Name</Label>
-                <Input
-                  name="lastName"
-                  placeholder="Enter your last name here..."
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                />
+
+              <div className="space-y-6">
+                {/* User Profile Header */}
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                    {userDetailsData.data.profile ? (
+                      <Image
+                        src={baseURL + "/" + userDetailsData.data.profile}
+                        alt="Profile"
+                        width={64}
+                        height={64}
+                        className="object-cover"
+                      />
+                    ) : (
+                      <User size={32} className="text-gray-400" />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {userDetailsData.data.first_name} {userDetailsData.data.last_name}
+                    </h3>
+                    <p className="text-sm text-gray-500">User ID: #{userDetailsData.data._id.slice(-8).toUpperCase()}</p>
+                  </div>
+                  <div className="ml-auto flex gap-2">
+                    <Badge variant={userDetailsData.data.role === 'admin' ? 'admin' : 'user'}>
+                      {getUserRole(userDetailsData.data.role)}
+                    </Badge>
+                    <Badge variant={userDetailsData.data.isActive ? 'active' : 'inactive'}>
+                      {getUserStatus(userDetailsData.data.isActive)}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* User Information Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-gray-500 text-sm">Personal Information</Label>
+                      <div className="mt-2 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <User size={18} className="text-gray-400" />
+                          <div>
+                            <p className="text-sm text-gray-500">Full Name</p>
+                            <p className="font-medium">
+                              {userDetailsData.data.first_name} {userDetailsData.data.last_name}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Mail size={18} className="text-gray-400" />
+                          <div>
+                            <p className="text-sm text-gray-500">Email Address</p>
+                            <p className="font-medium">{userDetailsData.data.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Phone size={18} className="text-gray-400" />
+                          <div>
+                            <p className="text-sm text-gray-500">Phone Number</p>
+                            <p className="font-medium">{userDetailsData.data.phone || 'N/A'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-gray-500 text-sm">Account Status</Label>
+                      <div className="mt-2 space-y-3">
+                        <div className="flex items-center gap-3">
+                          {userDetailsData.data.isActive ? (
+                            <CheckCircle size={18} className="text-emerald-500" />
+                          ) : (
+                            <XCircle size={18} className="text-red-500 cursor-pointer" />
+                          )}
+                          <div>
+                            <p className="text-sm text-gray-500">Account Status</p>
+                            <p className={`font-medium ${userDetailsData.data.isActive ? 'text-emerald-600' : 'text-red-600'}`}>
+                              {userDetailsData.data.isActive ? 'Active' : 'Inactive'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {userDetailsData.data.isDeleted ? (
+                            <XCircle size={18} className="text-red-500 cursor-pointer" />
+                          ) : (
+                            <CheckCircle size={18} className="text-emerald-500" />
+                          )}
+                          <div>
+                            <p className="text-sm text-gray-500">Deleted Status</p>
+                            <p className={`font-medium ${userDetailsData.data.isDeleted ? 'text-red-600' : 'text-emerald-600'}`}>
+                              {userDetailsData.data.isDeleted ? 'Deleted' : 'Not Deleted'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Smartphone size={18} className="text-gray-400" />
+                          <div>
+                            <p className="text-sm text-gray-500">Two-Step Verification</p>
+                            <p className={`font-medium ${userDetailsData.data.twoStepVerification ? 'text-emerald-600' : 'text-gray-600'}`}>
+                              {userDetailsData.data.twoStepVerification ? 'Enabled' : 'Disabled'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-gray-500 text-sm">Account Details</Label>
+                      <div className="mt-2 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <Shield size={18} className="text-gray-400" />
+                          <div>
+                            <p className="text-sm text-gray-500">User Role</p>
+                            <p className="font-medium">{getUserRole(userDetailsData.data.role)}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Calendar size={18} className="text-gray-400" />
+                          <div>
+                            <p className="text-sm text-gray-500">Account Created</p>
+                            <p className="font-medium">{formatDate(userDetailsData.data.createdAt)}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Clock size={18} className="text-gray-400" />
+                          <div>
+                            <p className="text-sm text-gray-500">Last Updated</p>
+                            <p className="font-medium">{formatDate(userDetailsData.data.updatedAt)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-gray-500 text-sm">Subscription Information</Label>
+                      <div className="mt-2 space-y-3">
+                        <div className="flex items-center gap-3">
+                          {userDetailsData.data.isSubscriberUser ? (
+                            <CheckCircle size={18} className="text-emerald-500" />
+                          ) : (
+                            <XCircle size={18} className="text-gray-400 cursor-pointer" />
+                          )}
+                          <div>
+                            <p className="text-sm text-gray-500">Subscriber Status</p>
+                            <p className={`font-medium ${userDetailsData.data.isSubscriberUser ? 'text-emerald-600' : 'text-gray-600'}`}>
+                              {userDetailsData.data.isSubscriberUser ? 'Subscriber' : 'Non-Subscriber'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {userDetailsData.data.subscriptionId ? (
+                            <CheckCircle size={18} className="text-emerald-500" />
+                          ) : (
+                            <XCircle size={18} className="text-gray-400 cursor-pointer" />
+                          )}
+                          <div>
+                            <p className="text-sm text-gray-500">Subscription ID</p>
+                            <p className="font-medium">{userDetailsData.data.subscriptionId || 'No Subscription'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">Unable to load user details</p>
             </div>
-
-            <div>
-              <Label>Email Address</Label>
-              <Input
-                name="email"
-                type="email"
-                placeholder="Enter your email address here..."
-                value={formData.email}
-                onChange={handleInputChange}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Phone Number</Label>
-                <Input
-                  name="phone"
-                  placeholder="Enter your phone number here..."
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div>
-                <Label>Date of Birth</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal h-10",
-                        !formData.dateOfBirth && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.dateOfBirth ? (
-                        format(formData.dateOfBirth, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={formData.dateOfBirth || undefined}
-                      onSelect={handleDateChange}
-                      initialFocus
-                      className="p-3 pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-
-            <div>
-              <Label>Address</Label>
-              <Input
-                name="address"
-                placeholder="Enter address here..."
-                value={formData.address}
-                onChange={handleInputChange}
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 mt-6">
-            <Button variant="outline" onClick={() => setShowAddModal(false)}>
-              Cancel
-            </Button>
-            <Button className='bg-[#8E4585] hover:bg-[#8E4585]' onClick={handleSaveUser}>
-              Save User
-            </Button>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
 
-      {/* Reject Confirmation Modal */}
-      <Dialog open={showRejectModal} onOpenChange={setShowRejectModal}>
-        <DialogContent className="max-w-2xl">
+      {/* Block/Unblock Confirmation Modal */}
+      <Dialog open={showBlockModal} onOpenChange={setShowBlockModal}>
+        <DialogContent className="max-w-md">
           <div className="text-center">
             <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
               <Ban size={32} className="text-red-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Rejected</h2>
-            <p className="text-gray-600 mb-6">Are you sure you want to rejected?</p>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              {selectedUser?.isActive ? "Block User" : "Unblock User"}
+            </h2>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to {selectedUser?.isActive ? "block" : "unblock"}{" "}
+              <span className="font-semibold">{selectedUser && getUserFullName(selectedUser)}</span>?
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              {selectedUser?.isActive
+                ? "Blocked users cannot access the system."
+                : "Unblocked users will regain access to the system."}
+            </p>
             <div className="flex justify-center gap-3">
-              <Button variant="outline" onClick={() => setShowRejectModal(false)}>
+              <Button variant="outline" onClick={() => setShowBlockModal(false)} disabled={isUpdating}>
                 Cancel
               </Button>
-              <Button onClick={confirmReject} className="">
-                Confirm
+              <Button
+                onClick={confirmBlockUser}
+                className={selectedUser?.isActive ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}
+                disabled={isUpdating}
+              >
+                {isUpdating ? "Processing..." : selectedUser?.isActive ? "Block User" : "Unblock User"}
               </Button>
             </div>
           </div>

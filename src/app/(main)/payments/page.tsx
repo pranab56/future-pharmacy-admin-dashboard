@@ -13,43 +13,52 @@ import {
 import { Search } from 'lucide-react';
 import Image from 'next/image';
 import { useMemo, useState } from 'react';
+import { useGetAllPaymentQuery } from '../../../features/payment/paymentApi'; // Adjust the import path as needed
 
-// Define interfaces
-interface Transaction {
-  id: string;
-  pharmacyName: string;
-  patientName: string;
-  amount: string;
-  date: string;
-  status: 'Successful' | 'Failed' | 'Refunded';
+// Define interfaces based on API response
+interface Payment {
+  _id: string;
+  email: string;
+  method: string;
+  amount: number;
+  status: string;
+  transactionId: string;
+  prescriptionOrderId?: string;
+  transactionDate: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Mock data - all transactions have the same ID as shown in the image
-const generateTransactions = (): Transaction[] => {
-  const transactions: Transaction[] = [];
+interface ApiResponse {
+  success: boolean;
+  message: string;
+  data: {
+    meta: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPage: number;
+    };
+    result: Payment[];
+  };
+}
 
-  for (let i = 0; i < 24; i++) {
-    const statusIndex = i % 9;
-    let status: Transaction['status'];
-    if (statusIndex === 1 || statusIndex === 6) {
-      status = 'Failed';
-    } else if (statusIndex === 3 || statusIndex === 8) {
-      status = 'Refunded';
-    } else {
-      status = 'Successful';
-    }
+// Status mapping from API to UI
+const statusMap: Record<string, 'Successful' | 'Failed' | 'Refunded'> = {
+  'paid': 'Successful',
+  'failed': 'Failed',
+  'refunded': 'Refunded',
+  'pending': 'Failed', // Map pending as failed for UI purposes
+  // Add other status mappings as needed
+};
 
-    transactions.push({
-      id: '#78578',
-      pharmacyName: 'CVS Pharmacy',
-      patientName: 'Jane Cooper',
-      amount: '$50.00',
-      date: '15/01/2025',
-      status: status
-    });
-  }
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
+};
 
-  return transactions;
+const formatCurrency = (amount: number): string => {
+  return `$${amount.toFixed(2)}`;
 };
 
 const ITEMS_PER_PAGE = 10;
@@ -60,31 +69,61 @@ export default function TransactionsList() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  const allTransactions = useMemo(() => generateTransactions(), []);
+  // Use the API hook
+  const { data: apiResponse, isLoading, error } = useGetAllPaymentQuery({});
 
-  // Filter transactions
-  const filteredTransactions = useMemo(() => {
-    return allTransactions.filter(transaction => {
+  // Extract payments from API response
+  const payments = apiResponse?.data?.result || [];
+
+  // Filter payments
+  const filteredPayments = useMemo(() => {
+    return payments.filter(payment => {
       const matchesSearch = searchQuery === '' ||
-        transaction.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        transaction.pharmacyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        transaction.patientName.toLowerCase().includes(searchQuery.toLowerCase());
+        payment.transactionId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        payment?.email?.toLowerCase()?.includes(searchQuery.toLowerCase()) ||
+        payment?._id.toLowerCase()?.includes(searchQuery.toLowerCase());
 
       const matchesStatus = statusFilter === 'all' ||
-        transaction.status.toLowerCase() === statusFilter.toLowerCase();
+        payment.status.toLowerCase() === statusFilter.toLowerCase();
 
-      return matchesSearch && matchesStatus;
+      // Date filtering
+      let matchesDate = true;
+      if (dateRange !== 'all') {
+        const paymentDate = new Date(payment.transactionDate);
+        const today = new Date();
+        const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+        switch (dateRange) {
+          case 'today':
+            matchesDate = paymentDate >= startOfToday;
+            break;
+          case 'week':
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay());
+            startOfWeek.setHours(0, 0, 0, 0);
+            matchesDate = paymentDate >= startOfWeek;
+            break;
+          case 'month':
+            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            matchesDate = paymentDate >= startOfMonth;
+            break;
+        }
+      }
+
+      return matchesSearch && matchesStatus && matchesDate;
     });
-  }, [allTransactions, searchQuery, statusFilter]);
+  }, [payments, searchQuery, statusFilter, dateRange]);
 
   // Pagination
-  const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredPayments.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentTransactions = filteredTransactions.slice(startIndex, endIndex);
+  const currentPayments = filteredPayments.slice(startIndex, endIndex);
 
-  const getStatusStyles = (status: Transaction['status']): string => {
-    switch (status) {
+  const getStatusStyles = (status: string): string => {
+    const uiStatus = statusMap[status] || 'Failed';
+
+    switch (uiStatus) {
       case 'Successful':
         return 'bg-green-100 text-green-700 hover:bg-green-100';
       case 'Failed':
@@ -92,8 +131,13 @@ export default function TransactionsList() {
       case 'Refunded':
         return 'bg-yellow-100 text-yellow-700 hover:bg-yellow-100';
       default:
-        return '';
+        return 'bg-gray-100 text-gray-700 hover:bg-gray-100';
     }
+  };
+
+  const getDisplayStatus = (status: string): string => {
+    const uiStatus = statusMap[status] || 'Failed';
+    return uiStatus;
   };
 
   const renderPageNumbers = (): (number | string)[] => {
@@ -116,6 +160,22 @@ export default function TransactionsList() {
     return pages;
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-lg text-gray-600">Loading transactions...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-lg text-red-600">Error loading transactions. Please try again.</div>
+      </div>
+    );
+  }
+
   return (
     <div className="">
       <div className="bg-white rounded-lg shadow-sm">
@@ -125,13 +185,13 @@ export default function TransactionsList() {
             <h1 className="text-2xl font-semibold text-gray-900">Transactions list</h1>
             <div className="flex gap-2">
               <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
-                <Image src="/icons/refill-prescription/csv.png" alt="view details" width={28} height={28} />
+                <Image src="/icons/refill-prescription/csv.png" alt="CSV Export" width={28} height={28} />
               </Button>
               <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
-                <Image src="/icons/refill-prescription/docs.png" alt="view details" width={28} height={28} />
+                <Image src="/icons/refill-prescription/docs.png" alt="Document Export" width={28} height={28} />
               </Button>
               <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
-                <Image src="/icons/refill-prescription/pdf.png" alt="view details" width={28} height={28} className='w-8 h-8' />
+                <Image src="/icons/refill-prescription/pdf.png" alt="PDF Export" width={28} height={28} className='w-8 h-8' />
               </Button>
             </div>
           </div>
@@ -141,7 +201,7 @@ export default function TransactionsList() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Type Something"
+                placeholder="Search by Transaction ID, Email, or ID"
                 value={searchQuery}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -164,7 +224,7 @@ export default function TransactionsList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Status: All</SelectItem>
-                <SelectItem value="successful">Successful</SelectItem>
+                <SelectItem value="paid">Successful</SelectItem>
                 <SelectItem value="failed">Failed</SelectItem>
                 <SelectItem value="refunded">Refunded</SelectItem>
               </SelectContent>
@@ -178,28 +238,38 @@ export default function TransactionsList() {
             <thead>
               <tr className="bg-gray-50 border-b">
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Transaction ID</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Pharmacy Name</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Patient Name</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Method</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Amount</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Date</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
               </tr>
             </thead>
             <tbody>
-              {currentTransactions.map((transaction, index) => (
-                <tr key={index} className="border-b hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{transaction.id}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{transaction.pharmacyName}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{transaction.patientName}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{transaction.amount}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{transaction.date}</td>
-                  <td className="px-6 py-4">
-                    <Badge className={`${getStatusStyles(transaction.status)} font-medium`}>
-                      {transaction.status}
-                    </Badge>
+              {currentPayments.length > 0 ? (
+                currentPayments.map((payment) => (
+                  <tr key={payment._id} className="border-b hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                      {payment.transactionId || `#${payment._id.substring(0, 8)}`}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{payment.email || 'N/A'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600 capitalize">{payment.method}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{formatCurrency(payment.amount)}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{formatDate(payment.transactionDate)}</td>
+                    <td className="px-6 py-4">
+                      <Badge className={`${getStatusStyles(payment.status)} font-medium capitalize`}>
+                        {getDisplayStatus(payment.status)}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                    No transactions found
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -207,7 +277,7 @@ export default function TransactionsList() {
         {/* Pagination */}
         <div className="p-6 border-t flex items-center justify-between">
           <div className="text-sm text-gray-600">
-            Showing {startIndex + 1} to {Math.min(endIndex, filteredTransactions.length)} of {filteredTransactions.length} entries
+            Showing {Math.min(startIndex + 1, filteredPayments.length)} to {Math.min(endIndex, filteredPayments.length)} of {filteredPayments.length} entries
           </div>
 
           <div className="flex items-center gap-2">
@@ -234,11 +304,10 @@ export default function TransactionsList() {
                 </Button>
               )
             ))}
-
             <Button
               variant="ghost"
               onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
+              disabled={currentPage === totalPages || totalPages === 0}
               className="text-gray-600"
             >
               Next

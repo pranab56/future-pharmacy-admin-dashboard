@@ -27,23 +27,31 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-
 import { cn } from '@/lib/utils';
-
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { format } from 'date-fns';
-import { Bold, CalendarIcon, Edit, Italic, List, ListOrdered, Trash2, Upload } from 'lucide-react';
+import { format, parse } from 'date-fns';
+import { Bold, Calendar as CalendarIcon, Edit, Italic, List, ListOrdered, Loader2, Trash2, Upload } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import { toast } from 'react-hot-toast';
+import {
+  useCreateBlogMutation,
+  useDeleteBlogMutation,
+  useGetAllBlogsQuery,
+  useUpdateBlogMutation
+} from '../../../features/blog/blogApi';
+import { baseURL } from '../../../utils/BaseURL';
 
 // Types
 interface Blog {
-  id: number;
+  _id: string;
   title: string;
   date: string;
   description: string;
   image: string;
+  createdAt: string;
+  blogLikes?: string[];
 }
 
 interface TiptapEditorProps {
@@ -55,9 +63,54 @@ interface BlogCardProps {
   blog: Blog;
   onEdit: (blog: Blog) => void;
   onDelete: (blog: Blog) => void;
+}
+
+// Helper function to parse date from your custom format
+const parseCustomDate = (dateString: string): Date | undefined => {
+  if (!dateString) return undefined;
+
+  try {
+    // Try to parse from your custom format "MM--dd-yyyy"
+    if (dateString.includes('--')) {
+      const parts = dateString.split('--');
+      if (parts.length === 3) {
+        const [month, day, year] = parts;
+        // Create date string in format that Date can parse: "yyyy-MM-dd"
+        const standardDateStr = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        const date = new Date(standardDateStr);
+        return isNaN(date.getTime()) ? undefined : date;
+      }
+    }
+
+    // Try parsing with date-fns if it's a different format
+    const possibleFormats = [
+      'yyyy-MM-dd',
+      'MM/dd/yyyy',
+      'dd-MM-yyyy',
+      'MM--dd-yyyy'
+    ];
+
+    for (const fmt of possibleFormats) {
+      try {
+        const parsed = parse(dateString, fmt, new Date());
+        if (!isNaN(parsed.getTime())) {
+          return parsed;
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+
+    // Last resort: try native Date parsing
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? undefined : date;
+  } catch (error) {
+    console.error('Error parsing date:', error);
+    return undefined;
+  }
 };
 
-// ✅ Fixed Tiptap Editor Component (SSR-safe + fixed height + scroll)
+// Tiptap Editor Component
 const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange }) => {
   const [isClient, setIsClient] = useState(false);
 
@@ -94,7 +147,7 @@ const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange }) => {
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
-    immediatelyRender: false, // 👈 Critical for SSR
+    immediatelyRender: false,
   });
 
   if (!isClient || !editor) {
@@ -169,6 +222,30 @@ const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange }) => {
 const BlogCard: React.FC<BlogCardProps> = ({ blog, onEdit, onDelete }) => {
   const [isHovered, setIsHovered] = useState(false);
 
+  // Get image URL - handle both local and external images
+  const getImageUrl = (imagePath: string) => {
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    return `${baseURL}/${imagePath.replace(/\\/g, '/')}`;
+  };
+
+  function formatCreatedAt(dateStr: any) {
+    const date = new Date(dateStr);
+
+    const months = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+
+    const month = months[date.getMonth()];
+    const day = date.getDate();
+    const year = date.getFullYear();
+
+    return `${month} ${day}, ${year}`;
+  }
+
+
   return (
     <Card
       className="relative overflow-hidden transition-all duration-300 p-0"
@@ -177,14 +254,15 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, onEdit, onDelete }) => {
     >
       <div className={`transition-all duration-300 ${isHovered ? 'blur-sm' : ''}`}>
         <Image
-          src={blog.image.trim() || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400'}
+          src={getImageUrl(blog.image) || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400'}
           alt={blog.title}
           height={1000}
           width={1000}
           className="w-full h-48 object-cover"
         />
         <CardContent className="p-4">
-          <p className="text-sm text-gray-500 mb-1">{blog.date}</p>
+          <p className="text-sm text-gray-500 mb-1">Created: {formatCreatedAt(blog.createdAt)}</p>
+          <p className="text-sm text-gray-500 mb-1">{blog.blogLikes?.length} Likes</p>
           <h3 className="font-semibold text-lg mb-2">{blog.title}</h3>
           <div
             className="text-sm text-gray-600 line-clamp-2 prose prose-sm max-w-none"
@@ -219,56 +297,78 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, onEdit, onDelete }) => {
 
 // Main Blog Management App
 export default function BlogManagementApp() {
-  const [blogs, setBlogs] = useState<Blog[]>([
-    {
-      id: 1,
-      title: 'Dear Doctor: Deborah Cobb, FNP-BC',
-      date: '2024-11-05',
-      description: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce malesuada pellentesque vitae aliquet.</p><ul><li>List item one</li><li>List item two</li></ul><ol><li>Numbered item one</li><li>Numbered item two</li></ol>',
-      image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400',
-    },
-    {
-      id: 2,
-      title: 'Dear Doctor: Deborah Cobb, FNP-BC',
-      date: '2024-11-04',
-      description: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce malesuada pellentesque vitae aliquet.</p>',
-      image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400',
-    },
-    {
-      id: 3,
-      title: 'Dear Doctor: Deborah Cobb, FNP-BC',
-      date: '2024-11-03',
-      description: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce malesuada pellentesque vitae aliquet.</p>',
-      image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400',
-    },
-  ]);
+  // API Hooks
+  const { data: blogsData, isLoading, refetch } = useGetAllBlogsQuery({});
+  const [createBlog, { isLoading: isCreating }] = useCreateBlogMutation();
+  const [updateBlog, { isLoading: isUpdating }] = useUpdateBlogMutation();
+  const [deleteBlog, { isLoading: isDeleting }] = useDeleteBlogMutation();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentBlog, setCurrentBlog] = useState<Blog | null>(null);
   const [blogToDelete, setBlogToDelete] = useState<Blog | null>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   // Form state
   const [title, setTitle] = useState('');
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [description, setDescription] = useState('');
-  const [image, setImage] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const blogs = blogsData?.data?.data || [];
+
+  console.log(blogs)
+
+  useEffect(() => {
+    if (currentBlog && isModalOpen) {
+      const parsedDate = parseCustomDate(currentBlog.date);
+      if (parsedDate) {
+        setDate(parsedDate);
+      }
+    }
+  }, [currentBlog, isModalOpen]);
+
+
+
+
 
   const handleCreateNew = () => {
     setCurrentBlog(null);
     setTitle('');
     setDate(undefined);
     setDescription('');
-    setImage(null);
+    setImageFile(null);
+    setImagePreview(null);
     setIsModalOpen(true);
   };
 
   const handleEdit = (blog: Blog) => {
+    console.log('Editing blog:', blog);
     setCurrentBlog(blog);
     setTitle(blog.title);
-    setDate(new Date(blog.date));
+
+    const parsedDate = parseCustomDate(blog.date);
+    if (parsedDate) {
+      setDate(parsedDate);
+    } else {
+      setDate(undefined);
+    }
+
     setDescription(blog.description);
-    setImage(blog.image);
+    setImageFile(null);
+
+    // Set preview to existing image
+    let imageUrl = '';
+    if (blog.image) {
+      if (blog.image.startsWith('http')) {
+        imageUrl = blog.image;
+      } else {
+        imageUrl = `${baseURL}/${blog.image.replace(/\\/g, '/')}`;
+      }
+    }
+    setImagePreview(imageUrl);
+
     setIsModalOpen(true);
   };
 
@@ -277,78 +377,236 @@ export default function BlogManagementApp() {
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (blogToDelete) {
-      setBlogs(blogs.filter(b => b.id !== blogToDelete.id));
+      try {
+        await deleteBlog(blogToDelete._id).unwrap();
+        toast.success('Blog deleted successfully!');
+        refetch();
+      } catch (error: any) {
+        toast.error(error?.data?.message || 'Failed to delete blog');
+      }
     }
     setIsDeleteDialogOpen(false);
     setBlogToDelete(null);
   };
 
-  const handleSave = () => {
+  // এই ফাংশনটি পরিবর্তন করা হয়েছে
+  const handleSave = async () => {
     if (!title.trim() || !date || !description.trim()) {
-      alert('Please fill in all required fields');
+      toast.error('Please fill in all required fields');
       return;
     }
 
-    const blogData: Blog = {
-      id: currentBlog?.id || Date.now(),
-      title,
-      date: date ? format(date, 'yyyy-MM-dd') : '',
-      description,
-      image: image || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400',
-    };
+    try {
+      if (currentBlog) {
+        // **সমাধান: ইমেজ ছাড়াই আপডেট করার জন্য JSON data পাঠানো**
+        const updateData = {
+          title: title.trim(),
+          date: format(date, 'MM--dd-yyyy'),
+          description: description.trim(),
+        };
 
-    if (currentBlog) {
-      setBlogs(blogs.map(b => b.id === currentBlog.id ? blogData : b));
-    } else {
-      setBlogs([...blogs, blogData]);
+        // যদি নতুন ইমেজ থাকে, তাহলে FormData ব্যবহার করব
+        if (imageFile) {
+          const formData = new FormData();
+          formData.append('title', title.trim());
+          formData.append('date', format(date, 'MM--dd-yyyy'));
+          formData.append('description', description.trim());
+          formData.append('image', imageFile);
+
+          console.log('Updating with new image');
+          await updateBlog({
+            data: formData,
+            id: currentBlog._id
+          }).unwrap();
+        } else {
+          // যদি নতুন ইমেজ না থাকে, তাহলে শুধু JSON data পাঠাব
+          console.log('Updating without image change');
+
+          // আপনার API যদি JSON support করে
+          await updateBlog({
+            data: updateData,
+            id: currentBlog._id
+          }).unwrap();
+        }
+
+        toast.success('Blog updated successfully!');
+      } else {
+        // Create new blog - image is required
+        if (!imageFile) {
+          toast.error('Please upload an image for new blog');
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('title', title.trim());
+        formData.append('date', format(date, 'MM--dd-yyyy'));
+        formData.append('description', description.trim());
+        formData.append('image', imageFile);
+
+        await createBlog(formData).unwrap();
+        toast.success('Blog created successfully!');
+      }
+
+      refetch();
+      setIsModalOpen(false);
+
+      // Reset form
+      setCurrentBlog(null);
+      setTitle('');
+      setDate(undefined);
+      setDescription('');
+      setImageFile(null);
+      setImagePreview(null);
+
+    } catch (error: any) {
+      console.error('Save error details:', error);
+
+      // আরও বিস্তারিত error message
+      if (error?.data) {
+        console.log('Error data:', error.data);
+        if (typeof error.data === 'object') {
+          toast.error(`Error: ${JSON.stringify(error.data)}`);
+        } else {
+          toast.error(`Error: ${error.data}`);
+        }
+      } else if (error?.status) {
+        toast.error(`HTTP Error ${error.status}`);
+      } else if (error?.message) {
+        toast.error(`Error: ${error.message}`);
+      } else {
+        toast.error('Failed to save blog. Please check console for details.');
+      }
     }
-
-    setIsModalOpen(false);
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (!file.type.startsWith('image/')) {
-        alert('Please upload an image file');
+        toast.error('Please upload an image file');
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
-        alert('Image size should be less than 5MB');
+        toast.error('Image size should be less than 5MB');
         return;
       }
 
+      setImageFile(file);
+
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImage(reader.result as string);
+        setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
 
+  // Alternative save function - যদি উপরেরটা কাজ না করে
+  const handleSaveAlternative = async () => {
+    if (!title.trim() || !date || !description.trim()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      if (currentBlog) {
+        // Method 1: JSON stringify করে পাঠানো
+        const updatePayload = {
+          title: title.trim(),
+          date: format(date, 'MM--dd-yyyy'),
+          description: description.trim(),
+          // যদি ইমেজ path পাঠাতে চান
+          image: currentBlog.image // existing image path
+        };
+
+        console.log('Update payload:', updatePayload);
+
+        // আপনার API endpoint যদি সরাসরি JSON নেয়
+        const response = await updateBlog({
+          data: updatePayload,
+          id: currentBlog._id
+        }).unwrap();
+
+        console.log('Update successful:', response);
+        toast.success('Blog updated successfully!');
+      } else {
+        // Create new blog
+        if (!imageFile) {
+          toast.error('Please upload an image for new blog');
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('title', title.trim());
+        formData.append('date', format(date, 'MM--dd-yyyy'));
+        formData.append('description', description.trim());
+        formData.append('image', imageFile);
+
+        await createBlog(formData).unwrap();
+        toast.success('Blog created successfully!');
+      }
+
+      refetch();
+      setIsModalOpen(false);
+
+      // Reset form
+      setCurrentBlog(null);
+      setTitle('');
+      setDate(undefined);
+      setDescription('');
+      setImageFile(null);
+      setImagePreview(null);
+
+    } catch (error: any) {
+      console.error('Alternative save error:', error);
+
+      // Try another approach if first fails
+      if (error?.data?.message?.includes('image') || error?.data?.message?.includes('Image')) {
+        // ইমেজ এরর হলে, একটা default blank image পাঠানোর চেষ্টা করুন
+        toast.error('Image field is required. Please select an image or contact support.');
+      } else {
+        toast.error(error?.data?.message || 'Failed to save blog');
+      }
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Blog Management</h1>
-        <Button onClick={handleCreateNew} className="bg-[#8E4585] ">
+        <Button onClick={handleCreateNew} className="bg-[#8E4585]">
           Create a New Blog
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {blogs.map((blog) => (
-          <BlogCard
-            key={blog.id}
-            blog={blog}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        ))}
-      </div>
+      {blogs.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500">No blogs found. Create your first blog!</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {blogs.map((blog: Blog) => (
+            <BlogCard
+              key={blog._id}
+              blog={blog}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
+      )}
 
-      {/* ✅ Fixed-Height Modal with Scrollable Editor */}
+      {/* Create/Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="flex flex-col max-w-5xl w-full h-[90vh] max-h-[90vh] p-0">
           <DialogHeader className="px-6 py-4 border-b">
@@ -368,7 +626,7 @@ export default function BlogManagementApp() {
 
             <div className="space-y-2">
               <Label>Date *</Label>
-              <Popover>
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
@@ -381,11 +639,14 @@ export default function BlogManagementApp() {
                     {date ? format(date, 'PPP') : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0" align="start">
                   <CalendarComponent
                     mode="single"
                     selected={date}
-                    onSelect={setDate}
+                    onSelect={(selectedDate) => {
+                      setDate(selectedDate);
+                      setCalendarOpen(false);
+                    }}
                     initialFocus
                   />
                 </PopoverContent>
@@ -401,12 +662,12 @@ export default function BlogManagementApp() {
             </div>
 
             <div className="space-y-2">
-              <Label>Upload Image</Label>
+              <Label>Upload Image {!currentBlog && '*'}</Label>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
-                {image ? (
+                {imagePreview ? (
                   <div className="space-y-4">
                     <Image
-                      src={image}
+                      src={imagePreview}
                       alt="Preview"
                       width={1000}
                       height={1000}
@@ -423,7 +684,10 @@ export default function BlogManagementApp() {
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setImage(null)}
+                        onClick={() => {
+                          setImageFile(null);
+                          setImagePreview(null);
+                        }}
                       >
                         Remove Image
                       </Button>
@@ -452,18 +716,35 @@ export default function BlogManagementApp() {
                   onChange={handleImageUpload}
                 />
               </div>
+              {currentBlog && !imageFile && (
+                <p className="text-sm text-green-600">
+                  ✓ Keeping existing image
+                </p>
+              )}
             </div>
           </div>
 
           <DialogFooter className="px-6 py-4 border-t flex justify-between">
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsModalOpen(false)}
+              disabled={isCreating || isUpdating}
+            >
               Cancel
             </Button>
             <Button
-              onClick={handleSave}
+              onClick={handleSave} // অথবা handleSaveAlternative ব্যবহার করতে পারেন
               className="bg-[#8E4585]"
-              disabled={!title.trim() || !date || !description.trim()}
+              disabled={
+                !title.trim() ||
+                !date ||
+                !description.trim() ||
+                isCreating ||
+                isUpdating ||
+                (!currentBlog && !imageFile)
+              }
             >
+              {(isCreating || isUpdating) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {currentBlog ? 'Update Blog' : 'Create Blog'}
             </Button>
           </DialogFooter>
@@ -485,13 +766,18 @@ export default function BlogManagementApp() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-3 sm:justify-center">
-            <AlertDialogCancel className="flex-1 sm:flex-none bg-purple-100 text-[#8E4585] hover:bg-purple-200">
+            <AlertDialogCancel
+              className="flex-1 sm:flex-none bg-purple-100 text-[#8E4585] hover:bg-purple-200"
+              disabled={isDeleting}
+            >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="flex-1 sm:flex-none bg-[#8E4585]"
+              disabled={isDeleting}
             >
+              {isDeleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Confirm
             </AlertDialogAction>
           </AlertDialogFooter>

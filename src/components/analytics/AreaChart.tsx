@@ -2,6 +2,14 @@
 
 import { Card } from "@/components/ui/card";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useState } from "react";
+import {
   CartesianGrid,
   Line,
   LineChart,
@@ -10,199 +18,163 @@ import {
   XAxis,
   YAxis
 } from "recharts";
+import { useReveniewResioQuery } from '../../features/overview/overviewApi';
 
-interface ActivityData {
-  day: string;
-  successful: number;
-  failed: number;
+interface RevenueData {
+  month: number;
+  totalIncome: number;
 }
 
-// Import Recharts types
-// type LegendPayload = {
-//   value: string;
-//   color: string;
-//   dataKey?: string;
-//   type?: string;
-//   payload?: {
-//     strokeDasharray?: string;
-//   };
-// };
-
-// type LegendProps = {
-//   payload?: readonly LegendPayload[];
-//   verticalAlign?: 'top' | 'middle' | 'bottom';
-//   align?: 'left' | 'center' | 'right';
-//   iconSize?: number;
-//   iconType?: 'line' | 'square' | 'circle' | 'cross' | 'diamond' | 'star' | 'triangle' | 'wye';
-//   layout?: 'horizontal' | 'vertical';
-//   formatter?: (value: string, entry: LegendPayload, index: number) => React.ReactNode;
-// };
-
-// Proper type for CustomDot props from Recharts
-interface CustomDotProps {
-  cx?: number;
-  cy?: number;
-  stroke?: string;
-  strokeWidth?: number;
-  r?: number;
-  fill?: string;
-  payload?: ActivityData;
-  dataKey?: string;
-  value?: number;
+interface ChartData {
+  name: string;
+  revenue: number;
+  monthNumber: number;
 }
 
-function SystemActivityChart() {
-  const activityData: ActivityData[] = [
-    { day: "Mon", successful: 65, failed: 55 },
-    { day: "Tue", successful: 58, failed: 68 },
-    { day: "Wed", successful: 45, failed: 42 },
-    { day: "Thu", successful: 90, failed: 38 },
-    { day: "Fri", successful: 88, failed: 55 },
-    { day: "Sat", successful: 70, failed: 58 },
-    { day: "Sun", successful: 48, failed: 38 },
-  ];
+const monthNames = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+];
 
-  const CustomDot = (props: CustomDotProps) => {
-    const { cx, cy, stroke, payload, dataKey } = props;
+function RevenueChart() {
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
-    // Only show dot on Thursday for successful deliveries
-    if (dataKey === "successful" && payload?.day === "Thu") {
+  // Generate last 3 years dynamically
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 3 }, (_, i) => currentYear - i);
+
+  const { data, isLoading, refetch } = useReveniewResioQuery(selectedYear);
+
+  const LoadingFc = () => {
+    return (
+      <div className="w-8 h-8 border-4 border-[#8E4484] border-t-transparent rounded-full animate-spin"></div>
+    );
+  };
+
+  // Process API data for chart
+  const processChartData = (apiData: RevenueData[]): ChartData[] => {
+    if (!apiData || !Array.isArray(apiData)) return [];
+
+    return apiData.map(item => ({
+      name: monthNames[item.month - 1] || `Month ${item.month}`,
+      revenue: item.totalIncome || 0,
+      monthNumber: item.month
+    }));
+  };
+
+  const chartData = data?.data ? processChartData(data.data) : [];
+
+  // Get total revenue for the year
+  const totalRevenue = chartData.reduce((sum, item) => sum + item.revenue, 0);
+
+  const handleYearChange = (year: string) => {
+    const yearNum = parseInt(year);
+    setSelectedYear(yearNum);
+    // The query will automatically refetch with new year parameter
+  };
+
+  // Custom tooltip component
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
       return (
-        <g>
-          <circle
-            cx={cx}
-            cy={cy}
-            r={6}
-            fill="#fff"
-            stroke={stroke}
-            strokeWidth={3}
-          />
-          <circle cx={cx} cy={cy} r={3} fill={stroke} />
-        </g>
+        <div className="relative flex flex-col gap-2 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-sm min-w-[180px]">
+          <div className="font-semibold text-gray-800 mb-1">{label}</div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="inline-block w-3 h-3 rounded-full bg-[#8E4484]" />
+              <span className="text-gray-700 text-xs">Revenue:</span>
+            </div>
+            <span className="font-medium text-gray-900">
+              ${payload[0].value.toFixed(2)}
+            </span>
+          </div>
+        </div>
       );
     }
     return null;
   };
 
-  // const renderLegend = (props: LegendProps) => {
-  //   const { payload } = props;
-
-  //   if (!payload || payload.length === 0) {
-  //     return null;
-  //   }
-
-  //   return (
-  //     <div className="flex items-center justify-center gap-6 mt-4">
-  //       {payload.map((entry: LegendPayload, index: number) => (
-  //         <div key={`legend-${index}`} className="flex items-center gap-2">
-  //           <span
-  //             className="inline-block w-3 h-3 rounded-full"
-  //             style={{ backgroundColor: entry.color }}
-  //           />
-  //           <span className="text-sm font-medium text-gray-700">
-  //             {entry.value}
-  //           </span>
-  //         </div>
-  //       ))}
-  //     </div>
-  //   );
-  // };
-
   return (
     <Card className="p-6 h-full">
-      <h1 className="text-xl font-semibold mb-6">Overall System Activity</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-xl font-semibold">Monthly Revenue</h1>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <p className="text-sm text-gray-500">Total Revenue ({selectedYear})</p>
+            <p className="text-2xl font-bold text-[#8E4484]">
+              ${totalRevenue.toFixed(2)}
+            </p>
+          </div>
+          <Select value={selectedYear.toString()} onValueChange={handleYearChange}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder="Select year" />
+            </SelectTrigger>
+            <SelectContent>
+              {years.map((year) => (
+                <SelectItem key={year} value={year.toString()}>
+                  {year}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       <div className="w-full h-[350px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart
-            data={activityData}
-            margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-          >
-            <CartesianGrid
-              strokeDasharray="0"
-              stroke="#f0f0f0"
-              vertical={true}
-              horizontal={true}
-            />
-            <XAxis
-              dataKey="day"
-              axisLine={false}
-              tickLine={false}
-              style={{ fontSize: "12px" }}
-              tick={{ fill: "#9ca3af" }}
-            />
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              style={{ fontSize: "12px" }}
-              tick={{ fill: "#9ca3af" }}
-              tickFormatter={(value) => `$${value}`}
-            />
-            <Tooltip
-              content={<CustomTooltip />}
-              cursor={{ stroke: "#e5e7eb", strokeWidth: 1, strokeDasharray: "5 5" }}
-            />
-            {/* <Legend content={renderLegend} /> */}
-            <Line
-              type="monotone"
-              dataKey="successful"
-              stroke="#7DD3C0"
-              strokeWidth={2.5}
-              dot={<CustomDot />}
-              activeDot={{ r: 6 }}
-              name="Successful Deliveries"
-            />
-            <Line
-              type="monotone"
-              dataKey="failed"
-              stroke="#F893B8"
-              strokeWidth={2.5}
-              dot={false}
-              activeDot={{ r: 6 }}
-              name="Failed Deliveries"
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        {isLoading ? (
+          <div className="w-full h-full flex items-center justify-center">
+            <LoadingFc />
+          </div>
+        ) : chartData.length === 0 ? (
+          <div className="w-full h-full flex flex-col items-center justify-center">
+            <p className="text-gray-500 text-lg mb-2">No revenue data available</p>
+            <p className="text-gray-400 text-sm">Select a different year or check back later</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={chartData}
+              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="#f0f0f0"
+                vertical={false}
+                horizontal={true}
+              />
+              <XAxis
+                dataKey="name"
+                axisLine={false}
+                tickLine={false}
+                style={{ fontSize: "12px" }}
+                tick={{ fill: "#9ca3af" }}
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                style={{ fontSize: "12px" }}
+                tick={{ fill: "#9ca3af" }}
+                tickFormatter={(value) => `$${value}`}
+              />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ stroke: "#e5e7eb", strokeWidth: 1 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="revenue"
+                stroke="#8E4484"
+                strokeWidth={3}
+                dot={{ r: 4, fill: "#8E4484", strokeWidth: 2, stroke: "#fff" }}
+                activeDot={{ r: 6, stroke: "#8E4484", strokeWidth: 2 }}
+                name="Monthly Revenue"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </Card>
   );
 }
 
-export default SystemActivityChart;
-
-interface CustomTooltipProps {
-  active?: boolean;
-  payload?: Array<{
-    value: number;
-    name: string;
-    dataKey: string;
-    color: string;
-    payload: ActivityData;
-  }>;
-  label?: string;
-}
-
-const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="relative flex flex-col gap-2 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-sm min-w-[180px]">
-        <div className="font-semibold text-gray-800 mb-1">{label}</div>
-        {payload.map((entry, index) => (
-          <div key={index} className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span
-                className="inline-block w-3 h-3 rounded-full"
-                style={{ backgroundColor: entry.color }}
-              />
-              <span className="text-gray-700 text-xs">
-                {entry.name === "Successful Deliveries" ? "Successful" : "Failed"}:
-              </span>
-            </div>
-            <span className="font-medium text-gray-900">${entry.value}</span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
+export default RevenueChart;

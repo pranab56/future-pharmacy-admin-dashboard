@@ -63,7 +63,7 @@ function DashboardStats() {
   const stats = [
     {
       icon: "/icons/overview/incoming.png",
-      value: isLoading ? LoadingFc() : data?.data?.orderRequiest,
+      value: isLoading ? LoadingFc() : data?.data?.orderPending,
       label: "Incoming Requests",
       bgColor: "bg-[#FFDEE7]",
       iconBgColor: "bg-white",
@@ -90,7 +90,7 @@ function DashboardStats() {
     },
     {
       icon: "/icons/overview/today-payment.png",
-      value: isLoading ? LoadingFc() : `$${data?.data?.todayPaymentAmount}`,
+      value: isLoading ? LoadingFc() : `$${data?.data?.todayPaymentAmount.toFixed(2)}`,
       label: "Today's Payments",
       bgColor: "bg-[#DEF6F8]",
       iconBgColor: "bg-white",

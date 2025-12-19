@@ -15,6 +15,7 @@ import Image from 'next/image';
 import React, { useState } from 'react';
 import { DriverDetailsModal } from '../../../components/driver/driver-details-modal';
 import { useGetAllDriverQuery, useGetSingleDriverQuery } from "../../../features/driver/driverApi";
+import { CustomLoading } from '../../../hooks/CustomLoading';
 import { useCSVDownload } from '../../../hooks/useCSVDownload';
 import { useDownloadPDF } from '../../../hooks/useDownloadPDF';
 import { useDownloadXlShit } from '../../../hooks/useDownloadXlShit';
@@ -162,9 +163,7 @@ export default function AllDriverList() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-lg text-gray-600">Loading drivers...</div>
-      </div>
+      <CustomLoading />
     );
   }
 

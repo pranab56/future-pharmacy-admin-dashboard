@@ -239,7 +239,7 @@ export default function HealthcareSchedule() {
       ];
     }
 
-    console.log(stats)
+
 
     const incomingRequests = apiData.length;
     const pendingRequests = apiData.filter((req: TransformedScheduleRequest) => req.status === 'pending').length;
@@ -248,6 +248,7 @@ export default function HealthcareSchedule() {
       req.status === 'completed' || req.status === 'approved'
     ).length;
     console.log(completedRequests);
+
 
     // These would need to come from separate API calls
     const activeDrivers = 15; // Placeholder - get from drivers API
@@ -383,6 +384,7 @@ export default function HealthcareSchedule() {
     );
   }
 
+  console.log(stats)
   return (
     <div className="flex flex-col gap-5">
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

@@ -28,6 +28,10 @@ import UpdatePharmacyDialog from '../../../components/pharmacy/UpdatePharmacyDia
 import { useCreatePharmacyMutation, useDeletePharmacyMutation, useGetAllPharmacyQuery, useUpdatePharmacyMutation } from '../../../features/fharmacy/fharmacyApi';
 
 import { Pharmacy, PharmacyFormData } from '../../../components/pharmacy';
+import { CustomLoading } from '../../../hooks/CustomLoading';
+import { useCSVDownload } from '../../../hooks/useCSVDownload';
+import { useDownloadPDF } from '../../../hooks/useDownloadPDF';
+import { useDownloadXlShit } from '../../../hooks/useDownloadXlShit';
 import { RTKError } from '../../../utils/types';
 
 const PartnerPharmacyTable = () => {
@@ -46,9 +50,14 @@ const PartnerPharmacyTable = () => {
   const [createPharmacy] = useCreatePharmacyMutation();
   const [updatePharmacy] = useUpdatePharmacyMutation();
   const [deletePharmacy] = useDeletePharmacyMutation();
+  const { downloadCSV } = useCSVDownload();
+  const { downloadPDF } = useDownloadPDF();
+  const { downloadExcel } = useDownloadXlShit();
 
   // API থেকে পাওয়া ডাটা স্টেটে রাখছি
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
+
+
 
   useEffect(() => {
     if (apiResponse?.success && apiResponse.data) {
@@ -241,15 +250,33 @@ const PartnerPharmacyTable = () => {
 
   // Handle export functions
   const handleExportCSV = () => {
-    console.log('Export CSV');
+    const dataToExport = filteredPharmacies.map(request => ({
+      Name: request.name,
+      Address: request.address,
+      Phone: request.phone,
+      Email: request.email,
+    }));
+    downloadCSV(dataToExport);
   };
 
   const handleExportDocs = () => {
-    console.log('Export Docs');
+    const dataToExport = filteredPharmacies.map(request => ({
+      Name: request.name,
+      Address: request.address,
+      Phone: request.phone,
+      Email: request.email,
+    }));
+    downloadExcel(dataToExport);
   };
 
   const handleExportPDF = () => {
-    console.log('Export PDF');
+    const dataToExport = filteredPharmacies.map(request => ({
+      Name: request.name,
+      Address: request.address,
+      Phone: request.phone,
+      Email: request.email,
+    }));
+    downloadPDF(dataToExport);
   };
 
   // Filter pharmacies based on search and status
@@ -269,9 +296,7 @@ const PartnerPharmacyTable = () => {
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-lg">Loading pharmacies...</div>
-      </div>
+      <CustomLoading />
     );
   }
 

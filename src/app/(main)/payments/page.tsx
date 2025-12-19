@@ -14,6 +14,10 @@ import { Search } from 'lucide-react';
 import Image from 'next/image';
 import { useMemo, useState } from 'react';
 import { useGetAllPaymentQuery } from '../../../features/payment/paymentApi';
+import { CustomLoading } from '../../../hooks/CustomLoading';
+import { useCSVDownload } from '../../../hooks/useCSVDownload';
+import { useDownloadPDF } from '../../../hooks/useDownloadPDF';
+import { useDownloadXlShit } from '../../../hooks/useDownloadXlShit';
 
 // Payment interface তৈরি করুন
 interface Payment {
@@ -51,6 +55,9 @@ export default function TransactionsList() {
   const [dateRange, setDateRange] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const { downloadExcel } = useDownloadXlShit();
+  const { downloadPDF } = useDownloadPDF();
+  const { downloadCSV } = useCSVDownload();
 
   // Use the API hook
   const { data: apiResponse, isLoading, error } = useGetAllPaymentQuery({});
@@ -99,6 +106,8 @@ export default function TransactionsList() {
     });
   }, [payments, searchQuery, statusFilter, dateRange]);
 
+  console.log("filteredPayments", filteredPayments)
+
   // Pagination
   const totalPages = Math.ceil(filteredPayments.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -145,11 +154,54 @@ export default function TransactionsList() {
     return pages;
   };
 
+  const handleExportCSV = () => {
+    const dataToExport = filteredPayments.map((payment: Payment) => ({
+      TransactionID: payment.transactionId || payment._id,
+      Email: payment.email || 'N/A',
+      Method: payment.method,
+      Amount: formatCurrency(payment.amount),
+      Date: formatDate(payment.transactionDate),
+      Status: getDisplayStatus(payment.status),
+      OriginalStatus: payment.status,
+      RawAmount: payment.amount,
+      RawDate: payment.transactionDate,
+    }));
+    downloadCSV(dataToExport, 'transactions-data');
+  };
+
+  const handleExportPDF = () => {
+    const dataToExport = filteredPayments.map((payment: Payment) => ({
+      TransactionID: payment.transactionId || payment._id,
+      Email: payment.email || 'N/A',
+      Method: payment.method,
+      Amount: formatCurrency(payment.amount),
+      Date: formatDate(payment.transactionDate),
+      Status: getDisplayStatus(payment.status),
+      OriginalStatus: payment.status,
+      RawAmount: payment.amount,
+      RawDate: payment.transactionDate,
+    }));
+    downloadPDF(dataToExport, 'transactions-data');
+  };
+
+  const handleExportXL = () => {
+    const dataToExport = filteredPayments.map((payment: Payment) => ({
+      TransactionID: payment.transactionId || payment._id,
+      Email: payment.email || 'N/A',
+      Method: payment.method,
+      Amount: formatCurrency(payment.amount),
+      Date: formatDate(payment.transactionDate),
+      Status: getDisplayStatus(payment.status),
+      OriginalStatus: payment.status,
+      RawAmount: payment.amount,
+      RawDate: payment.transactionDate,
+    }));
+    downloadExcel(dataToExport, 'transactions-data');
+  };
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-lg text-gray-600">Loading transactions...</div>
-      </div>
+      <CustomLoading />
     );
   }
 
@@ -169,13 +221,13 @@ export default function TransactionsList() {
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-semibold text-gray-900">Transactions list</h1>
             <div className="flex gap-2">
-              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+              <Button onClick={handleExportCSV} variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
                 <Image src="/icons/refill-prescription/csv.png" alt="CSV Export" width={28} height={28} />
               </Button>
-              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+              <Button onClick={handleExportXL} variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
                 <Image src="/icons/refill-prescription/docs.png" alt="Document Export" width={28} height={28} />
               </Button>
-              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+              <Button onClick={handleExportPDF} variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
                 <Image src="/icons/refill-prescription/pdf.png" alt="PDF Export" width={28} height={28} className='w-8 h-8' />
               </Button>
             </div>

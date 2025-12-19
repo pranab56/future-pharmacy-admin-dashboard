@@ -526,7 +526,7 @@ export default function BlogManagementApp() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Blog Management</h1>
-        <Button onClick={handleCreateNew} className="bg-primary">
+        <Button variant={"default"} onClick={handleCreateNew} className="bg-[#8E4585]">
           Create a New Blog
         </Button>
       </div>

@@ -18,6 +18,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { CustomLoading } from '../../../hooks/CustomLoading';
+import { useCSVDownload } from '../../../hooks/useCSVDownload';
+import { useDownloadPDF } from '../../../hooks/useDownloadPDF';
+import { useDownloadXlShit } from '../../../hooks/useDownloadXlShit';
 
 // Define interfaces based on API response
 interface PersonalInfo {
@@ -148,6 +152,9 @@ export default function PrescriptionTransferRequests() {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
 
   const { data, isLoading } = useGetAllTransferQuery({});
+  const { downloadExcel } = useDownloadXlShit();
+  const { downloadCSV } = useCSVDownload();
+  const { downloadPDF } = useDownloadPDF();
 
   // Transform API data for table
   const apiData = useMemo<TransformedTransferRequest[]>(() => {
@@ -208,6 +215,7 @@ export default function PrescriptionTransferRequests() {
     });
   }, [apiData, searchQuery, dateRange]);
 
+
   // Paginate data
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -240,25 +248,52 @@ export default function PrescriptionTransferRequests() {
 
   // Handle export functions
   const handleExportCSV = () => {
-    console.log('Export CSV', filteredData);
+    const dataToExport = filteredData.map(request => ({
+      No: request.no,
+      PatientName: request.patientName,
+      TransferFrom: request.transferFrom,
+      TransferTo: request.transferTo,
+      RxID: request.rxId,
+      MedicationNames: request.medicationNames,
+      Date: request.date,
+      Status: request.status
+    }));
+    downloadCSV(dataToExport);
     // Implement CSV export logic
   };
 
   const handleExportDocs = () => {
-    console.log('Export Docs', filteredData);
+    const dataToExport = filteredData.map(request => ({
+      No: request.no,
+      PatientName: request.patientName,
+      TransferFrom: request.transferFrom,
+      TransferTo: request.transferTo,
+      RxID: request.rxId,
+      MedicationNames: request.medicationNames,
+      Date: request.date,
+      Status: request.status
+    }));
+    downloadExcel(dataToExport);
     // Implement Docs export logic
   };
 
   const handleExportPDF = () => {
-    console.log('Export PDF', filteredData);
-    // Implement PDF export logic
+    const dataToExport = filteredData.map(request => ({
+      No: request.no,
+      PatientName: request.patientName,
+      TransferFrom: request.transferFrom,
+      TransferTo: request.transferTo,
+      RxID: request.rxId,
+      MedicationNames: request.medicationNames,
+      Date: request.date,
+      Status: request.status
+    }));
+    downloadPDF(dataToExport);
   };
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-gray-600">Loading transfer requests...</div>
-      </div>
+      <CustomLoading />
     );
   }
 

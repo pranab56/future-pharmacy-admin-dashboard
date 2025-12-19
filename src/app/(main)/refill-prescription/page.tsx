@@ -25,6 +25,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { CustomLoading } from '../../../hooks/CustomLoading';
+import { useCSVDownload } from '../../../hooks/useCSVDownload';
+import { useDownloadPDF } from '../../../hooks/useDownloadPDF';
+import { useDownloadXlShit } from '../../../hooks/useDownloadXlShit';
 
 // Define interfaces based on API response
 interface PersonalInfo {
@@ -132,6 +136,10 @@ export default function RefillPrescriptionRequests() {
 
   const { data, isLoading } = useGetAllrefillQuery({});
 
+  const { downloadExcel } = useDownloadXlShit();
+  const { downloadPDF } = useDownloadPDF();
+  const { downloadCSV } = useCSVDownload();
+
   // Transform API data
   const apiData = useMemo<TransformedRequest[]>(() => {
     if (!data || !data.data) return [];
@@ -194,6 +202,9 @@ export default function RefillPrescriptionRequests() {
     });
   }, [apiData, searchQuery, statusFilter, dateRange]);
 
+  console.log("filteredData", filteredData)
+
+
   // Paginate data
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -239,25 +250,50 @@ export default function RefillPrescriptionRequests() {
 
   // Handle export functions (placeholder - implement based on your needs)
   const handleExportCSV = () => {
-    console.log('Export CSV', filteredData);
+    const dataToExport = filteredData.map(request => ({
+      RefID: request.refId,
+      PatientName: request.patientName,
+      Prescription: request.prescription,
+      PharmacyName: request.pharmacyName,
+      Date: request.date,
+      Status: request.status,
+      OriginalStatus: request.originalStatus
+    }));
+    downloadCSV(dataToExport);
     // Implement CSV export logic
   };
 
   const handleExportDocs = () => {
-    console.log('Export Docs', filteredData);
+    const dataToExport = filteredData.map(request => ({
+      RefID: request.refId,
+      PatientName: request.patientName,
+      Prescription: request.prescription,
+      PharmacyName: request.pharmacyName,
+      Date: request.date,
+      Status: request.status,
+      OriginalStatus: request.originalStatus
+    }));
+    downloadExcel(dataToExport);
     // Implement Docs export logic
   };
 
   const handleExportPDF = () => {
-    console.log('Export PDF', filteredData);
+    const dataToExport = filteredData.map(request => ({
+      RefID: request.refId,
+      PatientName: request.patientName,
+      Prescription: request.prescription,
+      PharmacyName: request.pharmacyName,
+      Date: request.date,
+      Status: request.status,
+      OriginalStatus: request.originalStatus
+    }));
+    downloadPDF(dataToExport);
     // Implement PDF export logic
   };
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-gray-600">Loading prescription requests...</div>
-      </div>
+      <CustomLoading />
     );
   }
 

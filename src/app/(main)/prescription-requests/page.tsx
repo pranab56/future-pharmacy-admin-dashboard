@@ -21,6 +21,10 @@ import { Search } from 'lucide-react';
 import Image from 'next/image';
 import React, { useMemo, useState } from 'react';
 import { useGetAllPrescriptionQuery } from '../../../features/prescription/prescriptionApi';
+import { CustomLoading } from '../../../hooks/CustomLoading';
+import { useCSVDownload } from '../../../hooks/useCSVDownload';
+import { useDownloadPDF } from '../../../hooks/useDownloadPDF';
+import { useDownloadXlShit } from '../../../hooks/useDownloadXlShit';
 
 interface PrescriptionOrder {
   _id: string;
@@ -56,6 +60,9 @@ const PrescriptionRequestsTable = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [selectedRequest, setSelectedRequest] = useState<PrescriptionRequest | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const { downloadCSV } = useCSVDownload();
+  const { downloadPDF } = useDownloadPDF();
+  const { downloadExcel } = useDownloadXlShit();
 
   // Fetch data from API
   const { data: apiResponse, isLoading } = useGetAllPrescriptionQuery({});
@@ -72,6 +79,7 @@ const PrescriptionRequestsTable = () => {
       order: order
     }));
   }, [apiResponse]);
+
 
   // Apply filters and search
   const filteredRequests = useMemo(() => {
@@ -145,15 +153,46 @@ const PrescriptionRequestsTable = () => {
 
   // Handle export functions
   const handleExportCSV = () => {
-    console.log('Export CSV', filteredRequests);
+    const dataToExport = filteredRequests.map(request => ({
+      RequestID: request.id,
+      PatientName: request.patientName,
+      PharmacyName: request.pharmacyName,
+      deliveryAddress: request.order.deliveryAddress,
+      Email: request.order.email,
+      Phone: request.order.phone,
+      Status: request.order.status,
+      Amount: request.order.amount,
+    }));
+    downloadCSV(dataToExport);
   };
 
   const handleExportDocs = () => {
     console.log('Export Docs', filteredRequests);
+    const dataToExport = filteredRequests.map(request => ({
+      RequestID: request.id,
+      PatientName: request.patientName,
+      PharmacyName: request.pharmacyName,
+      deliveryAddress: request.order.deliveryAddress,
+      Email: request.order.email,
+      Phone: request.order.phone,
+      Status: request.order.status,
+      Amount: request.order.amount,
+    }));
+    downloadExcel(dataToExport);
   };
 
   const handleExportPDF = () => {
-    console.log('Export PDF', filteredRequests);
+    const dataToExport = filteredRequests.map(request => ({
+      RequestID: request.id,
+      PatientName: request.patientName,
+      PharmacyName: request.pharmacyName,
+      deliveryAddress: request.order.deliveryAddress,
+      Email: request.order.email,
+      Phone: request.order.phone,
+      Status: request.order.status,
+      Amount: request.order.amount,
+    }));
+    downloadPDF(dataToExport, 'prescription_requests.pdf', 'Prescription Requests');
   };
 
   // Format date for display
@@ -184,9 +223,7 @@ const PrescriptionRequestsTable = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-gray-600">Loading prescription requests...</div>
-      </div>
+      <CustomLoading />
     );
   }
 

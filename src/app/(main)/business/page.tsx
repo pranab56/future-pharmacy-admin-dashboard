@@ -23,6 +23,10 @@ import { Button } from '../../../components/ui/button';
 import { useGetAllDriverQuery } from '../../../features/driver/driverApi';
 import { useGetAllPharmacyQuery } from "../../../features/fharmacy/fharmacyApi";
 import { useGetAllInvestorsQuery } from "../../../features/investor/InvestorApi";
+import { CustomLoading } from '../../../hooks/CustomLoading';
+import { useCSVDownload } from '../../../hooks/useCSVDownload';
+import { useDownloadPDF } from '../../../hooks/useDownloadPDF';
+import { useDownloadXlShit } from '../../../hooks/useDownloadXlShit';
 
 // Tab Component Props
 interface TabsProps {
@@ -372,7 +376,6 @@ const ViewDetailsDialog = ({ type, data, children }: ViewDetailsDialogProps) => 
 // Pharmacy Component
 const PharmacyTab = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
-
   const [status, setStatus] = useState<string>('all');
 
   const { data: pharmacyResponse, isLoading } = useGetAllPharmacyQuery({});
@@ -419,9 +422,7 @@ const PharmacyTab = () => {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-        </div>
+        <CustomLoading />
       ) : (
         <>
           <div className="rounded-lg overflow-hidden">
@@ -549,9 +550,7 @@ const DriverTab = () => {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-        </div>
+        <CustomLoading />
       ) : (
         <>
           <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -748,6 +747,199 @@ const InvestorTab = () => {
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('pharmacy');
 
+  // ✅ Call hooks ONCE at component top level
+  const { data: pharmacyResponse } = useGetAllPharmacyQuery({});
+  const { data: driverResponse } = useGetAllDriverQuery({});
+  const { data: investorResponse } = useGetAllInvestorsQuery({});
+
+  const { downloadCSV } = useCSVDownload();
+  const { downloadPDF } = useDownloadPDF();
+  const { downloadExcel } = useDownloadXlShit();
+
+  // ✅ Reuse already-fetched data — DO NOT call hooks inside these functions!
+  const handleExportPharmacyCSV = () => {
+    const pharmacyData = pharmacyResponse?.data || [];
+    const dataToExport = pharmacyData.map((pharmacy: Pharmacy) => ({
+      PharmacyID: pharmacy._id,
+      PharmacyName: pharmacy.name,
+      Email: pharmacy.email,
+      Phone: pharmacy.phone,
+      Address: pharmacy.address,
+      ContactPerson: pharmacy.contactPerson,
+      Title: pharmacy.title,
+      YearOfBusiness: pharmacy.yearofBusiness,
+      Status: pharmacy.status,
+      CreatedAt: new Date(pharmacy.createdAt).toLocaleDateString(),
+    }));
+    downloadCSV(dataToExport, 'pharmacy-data');
+  };
+
+  const handleExportDriverCSV = () => {
+    const driverData = driverResponse?.data || [];
+    const dataToExport = driverData.map((driver: Driver) => ({
+      DriverID: driver._id,
+      Name: driver.name,
+      Email: driver.email,
+      Phone: driver.phone,
+      City: driver.city,
+      ZipCode: driver.zipCode,
+      VehicleType: driver.vehicleType,
+      YearsOfLicense: driver.yearOfDriverLicense,
+      Status: driver.status,
+      CreatedAt: new Date(driver.createdAt).toLocaleDateString(),
+    }));
+    downloadCSV(dataToExport, 'driver-data');
+  };
+
+  const handleExportInvestorCSV = () => {
+    const investorData = investorResponse?.data || [];
+    const dataToExport = investorData.map((investor: Investor) => ({
+      InvestorID: investor._id,
+      Name: investor.name,
+      Email: investor.email,
+      Phone: investor.phone,
+      OrganizationName: investor.organizationName,
+      OrganizationType: investor.organizationType,
+      Website: investor.website,
+      YearsOfInvestmentExperience: investor.yearOfInvestmentExperience,
+      Status: investor.status,
+      CreatedAt: new Date(investor.createdAt).toLocaleDateString(),
+    }));
+    downloadCSV(dataToExport, 'investor-data');
+  };
+
+  const handleExportPharmacyPDF = () => {
+    const pharmacyData = pharmacyResponse?.data || [];
+    const dataToExport = pharmacyData.map((pharmacy: Pharmacy) => ({
+      PharmacyID: pharmacy._id,
+      PharmacyName: pharmacy.name,
+      Email: pharmacy.email,
+      Phone: pharmacy.phone,
+      Address: pharmacy.address,
+      ContactPerson: pharmacy.contactPerson,
+      Title: pharmacy.title,
+      YearOfBusiness: pharmacy.yearofBusiness,
+      Status: pharmacy.status,
+      CreatedAt: new Date(pharmacy.createdAt).toLocaleDateString(),
+    }));
+    downloadPDF(dataToExport, 'pharmacy-data');
+  };
+
+  const handleExportDriverPDF = () => {
+    const driverData = driverResponse?.data || [];
+    const dataToExport = driverData.map((driver: Driver) => ({
+      DriverID: driver._id,
+      Name: driver.name,
+      Email: driver.email,
+      Phone: driver.phone,
+      City: driver.city,
+      ZipCode: driver.zipCode,
+      VehicleType: driver.vehicleType,
+      YearsOfLicense: driver.yearOfDriverLicense,
+      Status: driver.status,
+      CreatedAt: new Date(driver.createdAt).toLocaleDateString(),
+    }));
+    downloadPDF(dataToExport, 'driver-data');
+  };
+
+  const handleExportInvestorPDF = () => {
+    const investorData = investorResponse?.data || [];
+    const dataToExport = investorData.map((investor: Investor) => ({
+      InvestorID: investor._id,
+      Name: investor.name,
+      Email: investor.email,
+      Phone: investor.phone,
+      OrganizationName: investor.organizationName,
+      OrganizationType: investor.organizationType,
+      Website: investor.website,
+      YearsOfInvestmentExperience: investor.yearOfInvestmentExperience,
+      Status: investor.status,
+      CreatedAt: new Date(investor.createdAt).toLocaleDateString(),
+    }));
+    downloadPDF(dataToExport, 'investor-data');
+  };
+
+  const handleExportPharmacyExcel = () => {
+    const pharmacyData = pharmacyResponse?.data || [];
+    const dataToExport = pharmacyData.map((pharmacy: Pharmacy) => ({
+      PharmacyID: pharmacy._id,
+      PharmacyName: pharmacy.name,
+      Email: pharmacy.email,
+      Phone: pharmacy.phone,
+      Address: pharmacy.address,
+      ContactPerson: pharmacy.contactPerson,
+      Title: pharmacy.title,
+      YearOfBusiness: pharmacy.yearofBusiness,
+      Status: pharmacy.status,
+      CreatedAt: new Date(pharmacy.createdAt).toLocaleDateString(),
+    }));
+    downloadExcel(dataToExport, 'pharmacy-data');
+  };
+
+  const handleExportDriverExcel = () => {
+    const driverData = driverResponse?.data || [];
+    const dataToExport = driverData.map((driver: Driver) => ({
+      DriverID: driver._id,
+      Name: driver.name,
+      Email: driver.email,
+      Phone: driver.phone,
+      City: driver.city,
+      ZipCode: driver.zipCode,
+      VehicleType: driver.vehicleType,
+      YearsOfLicense: driver.yearOfDriverLicense,
+      Status: driver.status,
+      CreatedAt: new Date(driver.createdAt).toLocaleDateString(),
+    }));
+    downloadExcel(dataToExport, 'driver-data');
+  };
+
+  const handleExportInvestorExcel = () => {
+    const investorData = investorResponse?.data || [];
+    const dataToExport = investorData.map((investor: Investor) => ({
+      InvestorID: investor._id,
+      Name: investor.name,
+      Email: investor.email,
+      Phone: investor.phone,
+      OrganizationName: investor.organizationName,
+      OrganizationType: investor.organizationType,
+      Website: investor.website,
+      YearsOfInvestmentExperience: investor.yearOfInvestmentExperience,
+      Status: investor.status,
+      CreatedAt: new Date(investor.createdAt).toLocaleDateString(),
+    }));
+    downloadExcel(dataToExport, 'investor-data');
+  };
+
+  const handleDownloadCsv = () => {
+    if (activeTab === 'pharmacy') {
+      handleExportPharmacyCSV();
+    } else if (activeTab === 'driver') {
+      handleExportDriverCSV();
+    } else if (activeTab === 'investor') {
+      handleExportInvestorCSV();
+    }
+  };
+
+  const handleDownloadPdf = () => {
+    if (activeTab === 'pharmacy') {
+      handleExportPharmacyPDF();
+    } else if (activeTab === 'driver') {
+      handleExportDriverPDF();
+    } else if (activeTab === 'investor') {
+      handleExportInvestorPDF();
+    }
+  };
+
+  const handleDownloadXL = () => {
+    if (activeTab === 'pharmacy') {
+      handleExportPharmacyExcel();
+    } else if (activeTab === 'driver') {
+      handleExportDriverExcel();
+    } else if (activeTab === 'investor') {
+      handleExportInvestorExcel();
+    }
+  };
+
   return (
     <div className='flex flex-col gap-5'>
       <div className="p-6 shadow bg-white rounded-lg">
@@ -769,14 +961,14 @@ export default function App() {
               </Tabs>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
-                <Image src="/icons/refill-prescription/csv.png" alt="view details" width={28} height={28} />
+              <Button onClick={handleDownloadCsv} variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                <Image src="/icons/refill-prescription/csv.png" alt="CSV" width={28} height={28} />
               </Button>
-              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
-                <Image src="/icons/refill-prescription/docs.png" alt="view details" width={28} height={28} />
+              <Button onClick={handleDownloadXL} variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                <Image src="/icons/refill-prescription/docs.png" alt="Excel" width={28} height={28} />
               </Button>
-              <Button variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
-                <Image src="/icons/refill-prescription/pdf.png" alt="view details" width={28} height={28} className='w-8 h-8' />
+              <Button onClick={handleDownloadPdf} variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
+                <Image src="/icons/refill-prescription/pdf.png" alt="PDF" width={28} height={28} className='w-8 h-8' />
               </Button>
             </div>
           </div>

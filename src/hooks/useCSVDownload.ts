@@ -2,7 +2,7 @@
 
 export const useCSVDownload = () => {
   const downloadCSV = (
-    data: Record<string, any>[],
+    data: Record<string, unknown>[],  // Changed from any to unknown
     fileName = "data.csv"
   ) => {
     if (!data || data.length === 0) return;

@@ -4,7 +4,7 @@ import * as XLSX from "xlsx";
 
 export const useDownloadXlShit = () => {
   const downloadExcel = (
-    data: Record<string, any>[],
+    data: Record<string, unknown>[],  // Changed from any to unknown
     fileName = "data.xlsx",
     sheetName = "Sheet1"
   ) => {

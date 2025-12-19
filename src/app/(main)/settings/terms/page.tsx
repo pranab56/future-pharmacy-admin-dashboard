@@ -10,6 +10,7 @@ import {
   useGetCMSQuery,
 } from "../../../../features/CMS/CMSApi";
 import TipTapEditor from "../../../../TipTapEditor/TipTapEditor";
+import { RTKError } from '../../../../utils/types';
 
 const TermsConditionsPage = () => {
   const [content, setContent] = useState<string>("");
@@ -52,10 +53,11 @@ const TermsConditionsPage = () => {
 
       toast.success(response.message || "Terms updated successfully");
       refetch();
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to update terms");
-      console.error(error);
+    } catch (error: unknown) {
+      const err = error as RTKError;
+      toast.error(err?.data?.message || "Failed to update terms");
     }
+
   };
 
   if (isFetching) {

@@ -42,6 +42,7 @@ import {
   useUpdateBlogMutation
 } from '../../../features/blog/blogApi';
 import { baseURL } from '../../../utils/BaseURL';
+import { RTKError } from '../../../utils/types';
 
 // Types
 interface Blog {
@@ -96,7 +97,8 @@ const parseCustomDate = (dateString: string): Date | undefined => {
         if (!isNaN(parsed.getTime())) {
           return parsed;
         }
-      } catch (e) {
+      } catch (error) {
+        console.log(error);
         continue;
       }
     }
@@ -168,7 +170,7 @@ const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange }) => {
           onClick={() => editor.chain().focus().toggleBold().run()}
           className={cn(
             editor.isActive('bold') ? 'bg-gray-200' : '',
-            'min-w-[40px]'
+            'min-w-10'
           )}
         >
           <Bold className="w-4 h-4" />
@@ -180,7 +182,7 @@ const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange }) => {
           onClick={() => editor.chain().focus().toggleItalic().run()}
           className={cn(
             editor.isActive('italic') ? 'bg-gray-200' : '',
-            'min-w-[40px]'
+            'min-w-10'
           )}
         >
           <Italic className="w-4 h-4" />
@@ -192,7 +194,7 @@ const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange }) => {
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           className={cn(
             editor.isActive('bulletList') ? 'bg-gray-200' : '',
-            'min-w-[40px]'
+            'min-w-10'
           )}
         >
           <List className="w-4 h-4" />
@@ -204,7 +206,7 @@ const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange }) => {
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           className={cn(
             editor.isActive('orderedList') ? 'bg-gray-200' : '',
-            'min-w-[40px]'
+            'min-w-10'
           )}
         >
           <ListOrdered className="w-4 h-4" />
@@ -230,7 +232,8 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, onEdit, onDelete }) => {
     return `${baseURL}/${imagePath.replace(/\\/g, '/')}`;
   };
 
-  function formatCreatedAt(dateStr: any) {
+  // Line 233: যেখানে any type ছিল
+  function formatCreatedAt(dateStr: string) {
     const date = new Date(dateStr);
 
     const months = [
@@ -383,9 +386,11 @@ export default function BlogManagementApp() {
         await deleteBlog(blogToDelete._id).unwrap();
         toast.success('Blog deleted successfully!');
         refetch();
-      } catch (error: any) {
-        toast.error(error?.data?.message || 'Failed to delete blog');
+      } catch (error: unknown) {
+        const err = error as RTKError;
+        toast.error(err?.data?.message || 'Failed to delete blog');
       }
+
     }
     setIsDeleteDialogOpen(false);
     setBlogToDelete(null);
@@ -460,21 +465,25 @@ export default function BlogManagementApp() {
       setImageFile(null);
       setImagePreview(null);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Save error details:', error);
 
       // আরও বিস্তারিত error message
-      if (error?.data) {
-        console.log('Error data:', error.data);
-        if (typeof error.data === 'object') {
-          toast.error(`Error: ${JSON.stringify(error.data)}`);
+      if (error && typeof error === 'object' && 'data' in error) {
+        const err = error as { data?: unknown; status?: number; message?: string };
+        console.log('Error data:', err.data);
+
+        if (err.data && typeof err.data === 'object') {
+          toast.error(`Error: ${JSON.stringify(err.data)}`);
+        } else if (err.data) {
+          toast.error(`Error: ${String(err.data)}`);
+        } else if (err.status) {
+          toast.error(`HTTP Error ${err.status}`);
+        } else if (err.message) {
+          toast.error(`Error: ${err.message}`);
         } else {
-          toast.error(`Error: ${error.data}`);
+          toast.error('An unknown error occurred');
         }
-      } else if (error?.status) {
-        toast.error(`HTTP Error ${error.status}`);
-      } else if (error?.message) {
-        toast.error(`Error: ${error.message}`);
       } else {
         toast.error('Failed to save blog. Please check console for details.');
       }
@@ -503,74 +512,7 @@ export default function BlogManagementApp() {
     }
   };
 
-  // Alternative save function - যদি উপরেরটা কাজ না করে
-  const handleSaveAlternative = async () => {
-    if (!title.trim() || !date || !description.trim()) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
 
-    try {
-      if (currentBlog) {
-        // Method 1: JSON stringify করে পাঠানো
-        const updatePayload = {
-          title: title.trim(),
-          date: format(date, 'MM--dd-yyyy'),
-          description: description.trim(),
-          // যদি ইমেজ path পাঠাতে চান
-          image: currentBlog.image // existing image path
-        };
-
-        console.log('Update payload:', updatePayload);
-
-        // আপনার API endpoint যদি সরাসরি JSON নেয়
-        const response = await updateBlog({
-          data: updatePayload,
-          id: currentBlog._id
-        }).unwrap();
-
-        console.log('Update successful:', response);
-        toast.success('Blog updated successfully!');
-      } else {
-        // Create new blog
-        if (!imageFile) {
-          toast.error('Please upload an image for new blog');
-          return;
-        }
-
-        const formData = new FormData();
-        formData.append('title', title.trim());
-        formData.append('date', format(date, 'MM--dd-yyyy'));
-        formData.append('description', description.trim());
-        formData.append('image', imageFile);
-
-        await createBlog(formData).unwrap();
-        toast.success('Blog created successfully!');
-      }
-
-      refetch();
-      setIsModalOpen(false);
-
-      // Reset form
-      setCurrentBlog(null);
-      setTitle('');
-      setDate(undefined);
-      setDescription('');
-      setImageFile(null);
-      setImagePreview(null);
-
-    } catch (error: any) {
-      console.error('Alternative save error:', error);
-
-      // Try another approach if first fails
-      if (error?.data?.message?.includes('image') || error?.data?.message?.includes('Image')) {
-        // ইমেজ এরর হলে, একটা default blank image পাঠানোর চেষ্টা করুন
-        toast.error('Image field is required. Please select an image or contact support.');
-      } else {
-        toast.error(error?.data?.message || 'Failed to save blog');
-      }
-    }
-  };
 
   if (isLoading) {
     return (
@@ -584,7 +526,7 @@ export default function BlogManagementApp() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Blog Management</h1>
-        <Button onClick={handleCreateNew} className="bg-[#8E4585]">
+        <Button onClick={handleCreateNew} className="bg-primary">
           Create a New Blog
         </Button>
       </div>
@@ -734,7 +676,7 @@ export default function BlogManagementApp() {
             </Button>
             <Button
               onClick={handleSave} // অথবা handleSaveAlternative ব্যবহার করতে পারেন
-              className="bg-[#8E4585]"
+              className="bg-primary"
               disabled={
                 !title.trim() ||
                 !date ||
@@ -767,14 +709,14 @@ export default function BlogManagementApp() {
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-3 sm:justify-center">
             <AlertDialogCancel
-              className="flex-1 sm:flex-none bg-purple-100 text-[#8E4585] hover:bg-purple-200"
+              className="flex-1 sm:flex-none bg-purple-100 text-primary hover:bg-purple-200"
               disabled={isDeleting}
             >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
-              className="flex-1 sm:flex-none bg-[#8E4585]"
+              className="flex-1 sm:flex-none bg-primary"
               disabled={isDeleting}
             >
               {isDeleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

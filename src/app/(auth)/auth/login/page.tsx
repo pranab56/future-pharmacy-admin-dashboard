@@ -70,11 +70,14 @@ export default function LoginPage() {
           password: password
         };
 
+        console.log("Login credentials:", credentials);
+
         const response = await Login(credentials).unwrap() as LoginResponse;
+        console.log("Login response:", response);
 
         // Save token to storage
-        if (response.data?.accessToken) {
-          saveToken(response.data.accessToken);
+        if (response.data) {
+          saveToken(response.data);
           toast.success(response.message || 'Login successful!');
 
           // Redirect to home page
@@ -145,7 +148,7 @@ export default function LoginPage() {
                 }}
                 placeholder="Enter your email address here..."
                 className={`w-full px-4 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-[#8E4585] focus:border-transparent transition-all`}
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all`}
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-red-500">{errors.email}</p>
@@ -168,7 +171,7 @@ export default function LoginPage() {
                   }}
                   placeholder="Enter your password here..."
                   className={`w-full px-4 py-3 border ${errors.password ? 'border-red-500' : 'border-gray-300'
-                    } rounded-md focus:outline-none focus:ring-2 focus:ring-[#8E4585] focus:border-transparent transition-all pr-12`}
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all pr-12`}
                 />
                 <button
                   type="button"
@@ -188,7 +191,7 @@ export default function LoginPage() {
             <div className="text-right">
               <Link
                 href="/auth/forgot-password"
-                className="text-sm text-[#8E4585] hover:text-[#8E4585] font-medium"
+                className="text-sm text-primary hover:text-primary font-medium"
               >
                 Forgot Password?
               </Link>
@@ -198,7 +201,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading || !isFormValid}
-              className="w-full bg-[#8E4585] cursor-pointer hover:bg-[#8E4585] text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-primary cursor-pointer hover:bg-primary/90 text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Logging in...' : 'Login'}
             </button>
@@ -208,7 +211,7 @@ export default function LoginPage() {
               Don&apos;t have an account?{' '}
               <Link
                 href="/auth/register"
-                className="text-[#8E4585] hover:text-[#8E4585] font-medium"
+                className="text-primary hover:text-primary font-medium"
               >
                 Create Account
               </Link>

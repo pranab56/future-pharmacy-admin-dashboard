@@ -182,10 +182,10 @@ const ViewDetailsDialog = ({ type, data, children }: ViewDetailsDialogProps) => 
           {type === 'pharmacy' && (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                {data?.logo && (
+                {(data as Pharmacy).logo && (
                   <div className="w-20 h-20 rounded-lg overflow-hidden border">
                     <Image
-                      src={`/${data.logo}`}
+                      src={`/${(data as Pharmacy).logo}`}
                       alt={(data as Pharmacy).name}
                       width={80}
                       height={80}
@@ -372,7 +372,7 @@ const ViewDetailsDialog = ({ type, data, children }: ViewDetailsDialogProps) => 
 // Pharmacy Component
 const PharmacyTab = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [dateRange, setDateRange] = useState<string>('');
+
   const [status, setStatus] = useState<string>('all');
 
   const { data: pharmacyResponse, isLoading } = useGetAllPharmacyQuery({});

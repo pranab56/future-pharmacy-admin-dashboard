@@ -13,34 +13,17 @@ import {
 import { Search } from 'lucide-react';
 import Image from 'next/image';
 import { useMemo, useState } from 'react';
-import { useGetAllPaymentQuery } from '../../../features/payment/paymentApi'; // Adjust the import path as needed
+import { useGetAllPaymentQuery } from '../../../features/payment/paymentApi';
 
-// Define interfaces based on API response
+// Payment interface তৈরি করুন
 interface Payment {
   _id: string;
-  email: string;
+  transactionId: string;
+  email?: string; // Optional because it might not always exist
   method: string;
   amount: number;
-  status: string;
-  transactionId: string;
-  prescriptionOrderId?: string;
   transactionDate: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface ApiResponse {
-  success: boolean;
-  message: string;
-  data: {
-    meta: {
-      page: number;
-      limit: number;
-      total: number;
-      totalPage: number;
-    };
-    result: Payment[];
-  };
+  status: string;
 }
 
 // Status mapping from API to UI
@@ -72,16 +55,18 @@ export default function TransactionsList() {
   // Use the API hook
   const { data: apiResponse, isLoading, error } = useGetAllPaymentQuery({});
 
-  // Extract payments from API response
-  const payments = apiResponse?.data?.result || [];
+  // Extract payments from API response with useMemo
+  const payments = useMemo<Payment[]>(() => {
+    return apiResponse?.data?.result || [];
+  }, [apiResponse]);
 
   // Filter payments
   const filteredPayments = useMemo(() => {
-    return payments.filter(payment => {
+    return payments.filter((payment: Payment) => { // এখানে type specify করুন
       const matchesSearch = searchQuery === '' ||
         payment.transactionId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        payment?.email?.toLowerCase()?.includes(searchQuery.toLowerCase()) ||
-        payment?._id.toLowerCase()?.includes(searchQuery.toLowerCase());
+        (payment.email?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+        payment._id.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesStatus = statusFilter === 'all' ||
         payment.status.toLowerCase() === statusFilter.toLowerCase();
@@ -247,7 +232,7 @@ export default function TransactionsList() {
             </thead>
             <tbody>
               {currentPayments.length > 0 ? (
-                currentPayments.map((payment) => (
+                currentPayments.map((payment: Payment) => (
                   <tr key={payment._id} className="border-b hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
                       {payment.transactionId || `#${payment._id.substring(0, 8)}`}

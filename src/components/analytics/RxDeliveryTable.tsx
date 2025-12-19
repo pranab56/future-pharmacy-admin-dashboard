@@ -173,7 +173,7 @@ function RxDeliveryTable() {
               </tr>
             </thead>
             <tbody>
-              {prescriptionData.map((prescription, index) => {
+              {prescriptionData.map((prescription) => {
                 const displayStatus = getStatusDisplay(prescription.status);
                 const paymentStatus = getPaymentStatus(prescription.amount);
 

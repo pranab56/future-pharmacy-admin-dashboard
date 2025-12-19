@@ -4,19 +4,11 @@ import { baseApi } from "../../utils/apiBaseQuery";
 export const notificationApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getAllNotification: builder.query({
-      query: () => ({
-        url: "/notification/admin-all",
+      query: ({ page, limit }) => ({
+        url: `/notification/admin-all?page=${page}&limit=${limit}`,
         method: "GET",
       }),
     }),
-
-    getSingleNotification: builder.query({
-      query: (id) => ({
-        url: `/notification/${id}`,
-        method: "GET",
-      }),
-    }),
-
 
     singleReadNotification: builder.mutation({
       query: (id) => ({
@@ -25,21 +17,35 @@ export const notificationApi = baseApi.injectEndpoints({
       }),
     }),
 
-
-
     allReadNotification: builder.mutation({
       query: () => ({
         url: `/notification/all-read`,
         method: "POST",
       }),
     }),
+
+    allDeleteNotification: builder.mutation({
+      query: () => ({
+        url: `/notification`,
+        method: "DELETE",
+      }),
+    }),
+
+    singleDeleteNotification: builder.mutation({
+      query: (id) => ({
+        url: `/notification/${id}`,
+        method: "DELETE",
+      }),
+    }),
+
   }),
 });
 
 // Export hooks
 export const {
   useGetAllNotificationQuery,
-  useGetSingleNotificationQuery,
   useSingleReadNotificationMutation,
-  useAllReadNotificationMutation
+  useAllReadNotificationMutation,
+  useAllDeleteNotificationMutation,
+  useSingleDeleteNotificationMutation
 } = notificationApi;

@@ -10,6 +10,7 @@ import {
   useGetCMSQuery,
 } from "../../../../features/CMS/CMSApi";
 import TipTapEditor from "../../../../TipTapEditor/TipTapEditor";
+import { RTKError } from '../../../../utils/types';
 
 const AboutPage = () => {
   const [content, setContent] = useState<string>("");
@@ -52,9 +53,9 @@ const AboutPage = () => {
 
       toast.success(response.message || "About updated successfully");
       refetch();
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to update About");
-      console.error(error);
+    } catch (error: unknown) {
+      const err = error as RTKError;
+      toast.error(err?.data?.message || 'Failed to delete blog');
     }
   };
 

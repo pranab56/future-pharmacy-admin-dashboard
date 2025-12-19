@@ -59,7 +59,7 @@ export default function UserProfilePage() {
 
   // Activity log with dynamic timestamps
   const [activityLog, setActivityLog] = useState<Array<{
-    icon: any;
+    icon: React.ComponentType<{ className?: string }>;
     title: string;
     description: string;
     timestamp: string;
@@ -116,7 +116,7 @@ export default function UserProfilePage() {
   }, [profileData]);
 
   // Add new activity to log
-  const addActivityLog = (title: string, description: string, icon: any) => {
+  const addActivityLog = (title: string, description: string, icon: React.ComponentType<{ className?: string }>) => {
     const newActivity = {
       icon,
       title,
@@ -157,8 +157,13 @@ export default function UserProfilePage() {
         setPreviewImage(null);
         refetch();
       }
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to update profile');
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'data' in error) {
+        const err = error as { data?: { message?: string } };
+        toast.error(err.data?.message || 'Failed to update profile');
+      } else {
+        toast.error('Failed to update profile');
+      }
       console.error('Update profile error:', error);
     }
   };
@@ -204,8 +209,13 @@ export default function UserProfilePage() {
         setNewPassword('');
         setPasswordErrors({ oldPassword: '', newPassword: '' });
       }
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to change password');
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'data' in error) {
+        const err = error as { data?: { message?: string } };
+        toast.error(err.data?.message || 'Failed to change password');
+      } else {
+        toast.error('Failed to change password');
+      }
       console.error('Password change error:', error);
     }
   };
@@ -220,8 +230,13 @@ export default function UserProfilePage() {
         addActivityLog('Security Settings Updated', `${action} Two-Factor Authentication`, Shield);
         refetch();
       }
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to update 2FA settings');
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'data' in error) {
+        const err = error as { data?: { message?: string } };
+        toast.error(err.data?.message || 'Failed to update 2FA settings');
+      } else {
+        toast.error('Failed to update 2FA settings');
+      }
       console.error('2FA toggle error:', error);
     }
   };
@@ -245,13 +260,13 @@ export default function UserProfilePage() {
     if (oldPassword && passwordErrors.oldPassword) {
       setPasswordErrors(prev => ({ ...prev, oldPassword: '' }));
     }
-  }, [oldPassword]);
+  }, [oldPassword, passwordErrors.oldPassword]);
 
   useEffect(() => {
     if (newPassword && passwordErrors.newPassword) {
       setPasswordErrors(prev => ({ ...prev, newPassword: '' }));
     }
-  }, [newPassword]);
+  }, [newPassword, passwordErrors.newPassword]);
 
   if (isLoading) {
     return (

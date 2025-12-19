@@ -36,16 +36,17 @@ interface PersonalInfo {
   _id: string;
 }
 
+// Replace these lines in the PharmacyInfo interface:
 interface PharmacyInfo {
   name: string;
   phone?: string;
   city?: string;
   state?: string;
   zipCode?: string;
-  availableDate?: any[];
-  availableTime?: any[];
+  availableDate?: string[];  // Changed from any[]
+  availableTime?: string[];  // Changed from any[]
   _id: string;
-  availableDateTime?: any[];
+  availableDateTime?: string[];  // Changed from any[]
 }
 
 interface DeliveryInfo {
@@ -74,6 +75,19 @@ interface PrescriptionRequest {
   status: string;
   createdAt: string;
   updatedAt: string;
+}
+
+// নতুন interface যোগ করুন: Transformed data এর জন্য
+interface TransformedRequest {
+  _id: string;
+  refId: string;
+  patientName: string;
+  prescription: string;
+  pharmacyName: string;
+  date: string;
+  status: string;
+  originalStatus: string;
+  originalData: PrescriptionRequest;
 }
 
 // Helper function to format date
@@ -119,7 +133,7 @@ export default function RefillPrescriptionRequests() {
   const { data, isLoading } = useGetAllrefillQuery({});
 
   // Transform API data
-  const apiData = useMemo(() => {
+  const apiData = useMemo<TransformedRequest[]>(() => {
     if (!data || !data.data) return [];
 
     return data.data.map((item: PrescriptionRequest) => ({
@@ -136,10 +150,10 @@ export default function RefillPrescriptionRequests() {
   }, [data]);
 
   // Filter data
-  const filteredData = useMemo(() => {
+  const filteredData = useMemo<TransformedRequest[]>(() => {
     if (!apiData.length) return [];
 
-    return apiData.filter(item => {
+    return apiData.filter((item: TransformedRequest) => {
       // Search filter
       const matchesSearch = searchQuery === '' ||
         Object.values(item).some(val =>
@@ -490,7 +504,7 @@ export default function RefillPrescriptionRequests() {
             </thead>
             <tbody>
               {currentData.length > 0 ? (
-                currentData.map((item) => (
+                currentData.map((item: TransformedRequest) => (
                   <tr key={item._id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-900">{item.refId}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{item.patientName}</td>

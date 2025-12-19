@@ -74,16 +74,20 @@ interface ScheduleRequest {
   updatedAt: string;
 }
 
-interface ApiResponse {
-  success: boolean;
-  message: string;
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPage: number;
-  };
-  data: ScheduleRequest[];
+// Transformed data interface
+interface TransformedScheduleRequest {
+  _id: string;
+  no: string;
+  patientName: string;
+  pharmacyName: string;
+  serviceType: string;
+  scheduledDate: string;
+  requestDate: string;
+  assignedDriver: string;
+  status: string;
+  originalData: ScheduleRequest;
+  availableTimes: string;
+  phone: string;
 }
 
 // Helper function to format date
@@ -140,6 +144,7 @@ const getScheduledDate = (pharmacyInfo: PharmacyInfo): string => {
 
 // Helper function to get assigned driver (placeholder - replace with actual logic)
 const getAssignedDriver = (request: ScheduleRequest): string => {
+  console.log(request);
   // This is a placeholder - you'll need to implement actual driver assignment logic
   // For now, return a placeholder or leave empty
   return 'Not assigned';
@@ -177,9 +182,32 @@ export default function HealthcareSchedule() {
 
   const { data, isLoading } = useGetAllScheduleQuery({});
 
+  // Transform API data
+  const apiData = useMemo<TransformedScheduleRequest[]>(() => {
+    if (!data || !data.data) return [];
+
+    return data.data.map((item: ScheduleRequest, index: number) => ({
+      _id: item._id,
+      no: String(index + 1).padStart(2, '0'),
+      patientName: getPatientName(item.personalInfo),
+      pharmacyName: item.pharmacyInfo.name,
+      serviceType: formatServiceType(item.pharmacyInfo.serviceType),
+      scheduledDate: getScheduledDate(item.pharmacyInfo),
+      requestDate: formatDate(item.createdAt),
+      assignedDriver: getAssignedDriver(item),
+      status: item.status,
+      originalData: item,
+      // Additional info for display
+      availableTimes: item.pharmacyInfo.availableDateTime.length > 0
+        ? item.pharmacyInfo.availableDateTime[0].time.join(', ')
+        : item.pharmacyInfo.availableTime?.join(', ') || 'No times specified',
+      phone: item.personalInfo.phone
+    }));
+  }, [data]);
+
   // Calculate stats from API data
   const stats = useMemo(() => {
-    if (!data || !data.data) {
+    if (!apiData.length) {
       return [
         {
           icon: "/icons/overview/incoming.png",
@@ -211,10 +239,15 @@ export default function HealthcareSchedule() {
       ];
     }
 
-    const requests = data.data;
-    const incomingRequests = requests.length;
-    const pendingRequests = requests.filter(req => req.status === 'pending').length;
-    const completedRequests = requests.filter(req => req.status === 'completed' || req.status === 'approved').length;
+    console.log(stats)
+
+    const incomingRequests = apiData.length;
+    const pendingRequests = apiData.filter((req: TransformedScheduleRequest) => req.status === 'pending').length;
+    console.log(pendingRequests);
+    const completedRequests = apiData.filter((req: TransformedScheduleRequest) =>
+      req.status === 'completed' || req.status === 'approved'
+    ).length;
+    console.log(completedRequests);
 
     // These would need to come from separate API calls
     const activeDrivers = 15; // Placeholder - get from drivers API
@@ -249,36 +282,13 @@ export default function HealthcareSchedule() {
         textColor: "text-amber-600",
       },
     ];
-  }, [data]);
-
-  // Transform API data
-  const apiData = useMemo(() => {
-    if (!data || !data.data) return [];
-
-    return data.data.map((item: ScheduleRequest, index: number) => ({
-      _id: item._id,
-      no: String(index + 1).padStart(2, '0'),
-      patientName: getPatientName(item.personalInfo),
-      pharmacyName: item.pharmacyInfo.name,
-      serviceType: formatServiceType(item.pharmacyInfo.serviceType),
-      scheduledDate: getScheduledDate(item.pharmacyInfo),
-      requestDate: formatDate(item.createdAt),
-      assignedDriver: getAssignedDriver(item),
-      status: item.status,
-      originalData: item,
-      // Additional info for display
-      availableTimes: item.pharmacyInfo.availableDateTime.length > 0
-        ? item.pharmacyInfo.availableDateTime[0].time.join(', ')
-        : item.pharmacyInfo.availableTime?.join(', ') || 'No times specified',
-      phone: item.personalInfo.phone
-    }));
-  }, [data]);
+  }, [apiData]);
 
   // Filter data
-  const filteredData = useMemo(() => {
+  const filteredData = useMemo<TransformedScheduleRequest[]>(() => {
     if (!apiData.length) return [];
 
-    return apiData.filter(item => {
+    return apiData.filter((item: TransformedScheduleRequest) => {
       // Search filter
       const matchesSearch = searchQuery === '' ||
         Object.values(item).some(val =>
@@ -325,8 +335,8 @@ export default function HealthcareSchedule() {
   const endIndex = startIndex + itemsPerPage;
   const currentData = filteredData.slice(startIndex, endIndex);
 
-  const getPageNumbers = () => {
-    const pages = [];
+  const getPageNumbers = (): (number | string)[] => {
+    const pages: (number | string)[] = [];
     if (totalPages <= 7) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
@@ -489,7 +499,7 @@ export default function HealthcareSchedule() {
                       <div>
                         <p className="text-sm font-medium text-gray-500 mb-2">Available Date & Time Slots:</p>
                         <div className="space-y-3">
-                          {selectedRequest.pharmacyInfo.availableDateTime.map((slot, index) => (
+                          {selectedRequest.pharmacyInfo.availableDateTime.map((slot) => (
                             <div key={slot._id} className="p-3 bg-gray-50 rounded-lg">
                               <div className="flex items-center justify-between mb-2">
                                 <p className="text-sm font-medium text-gray-900">Date: {slot.date}</p>
@@ -583,15 +593,6 @@ export default function HealthcareSchedule() {
         </DialogContent>
       </Dialog>
 
-      {/* Stats Cards - Uncomment if needed */}
-      {/* 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {stats.map((stat, index) => (
-          <StatCard key={index} {...stat} />
-        ))}
-      </div>
-      */}
-
       <div className="bg-white rounded-lg shadow-sm">
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
@@ -634,7 +635,7 @@ export default function HealthcareSchedule() {
               <Input
                 placeholder="Search by patient name, pharmacy, service type..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                 className="pl-10 bg-gray-50 border-gray-200"
               />
             </div>
@@ -681,7 +682,7 @@ export default function HealthcareSchedule() {
             </thead>
             <tbody>
               {currentData.length > 0 ? (
-                currentData.map((item) => (
+                currentData.map((item: TransformedScheduleRequest) => (
                   <tr key={item._id} className="border-b border-gray-200 hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-900">{item.no}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">

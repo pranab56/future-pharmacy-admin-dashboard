@@ -29,6 +29,7 @@ interface PersonalInfo {
   _id: string;
 }
 
+// Replace the interface properties with proper types
 interface PharmacyInfo {
   name: string;
   phone?: string;
@@ -42,8 +43,8 @@ interface PharmacyInfo {
   newPharmacyState?: string;
   newPharmacyZipCode?: string;
   _id: string;
-  availableDateTime?: any[];
-  availableTime?: any[];
+  availableDateTime?: string[];  // Changed from any[] to string[]
+  availableTime?: string[];      // Changed from any[] to string[]
 }
 
 interface Medication {
@@ -64,16 +65,18 @@ interface TransferRequest {
   updatedAt: string;
 }
 
-interface ApiResponse {
-  success: boolean;
-  message: string;
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPage: number;
-  };
-  data: TransferRequest[];
+// Transformed data interface
+interface TransformedTransferRequest {
+  _id: string;
+  no: string;
+  patientName: string;
+  transferFrom: string;
+  transferTo: string;
+  rxId: string;
+  medicationNames: string;
+  date: string;
+  status: string;
+  originalData: TransferRequest;
 }
 
 // Helper function to format date
@@ -146,33 +149,8 @@ export default function PrescriptionTransferRequests() {
 
   const { data, isLoading } = useGetAllTransferQuery({});
 
-  // Calculate stats from API data
-  const stats = useMemo(() => {
-    if (!data || !data.data) {
-      return {
-        totalRequests: 0,
-        pendingRequests: 0,
-        completedRequests: 0,
-        inProgressRequests: 0
-      };
-    }
-
-    const requests = data.data;
-    const totalRequests = requests.length;
-    const pendingRequests = requests.filter(req => req.status === 'pending').length;
-    const completedRequests = requests.filter(req => req.status === 'completed' || req.status === 'approved').length;
-    const inProgressRequests = requests.filter(req => req.status === 'in-progress').length;
-
-    return {
-      totalRequests,
-      pendingRequests,
-      completedRequests,
-      inProgressRequests
-    };
-  }, [data]);
-
   // Transform API data for table
-  const apiData = useMemo(() => {
+  const apiData = useMemo<TransformedTransferRequest[]>(() => {
     if (!data || !data.data) return [];
 
     return data.data.map((item: TransferRequest, index: number) => ({
@@ -190,10 +168,10 @@ export default function PrescriptionTransferRequests() {
   }, [data]);
 
   // Filter data based on search query
-  const filteredData = useMemo(() => {
+  const filteredData = useMemo<TransformedTransferRequest[]>(() => {
     if (!apiData.length) return [];
 
-    return apiData.filter(item => {
+    return apiData.filter((item: TransformedTransferRequest) => {
       // Search filter
       const matchesSearch = searchQuery === '' ||
         Object.values(item).some(val =>
@@ -236,8 +214,8 @@ export default function PrescriptionTransferRequests() {
   const endIndex = startIndex + itemsPerPage;
   const currentData = filteredData.slice(startIndex, endIndex);
 
-  const getPageNumbers = () => {
-    const pages = [];
+  const getPageNumbers = (): (number | string)[] => {
+    const pages: (number | string)[] = [];
     if (totalPages <= 7) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
@@ -463,51 +441,6 @@ export default function PrescriptionTransferRequests() {
       </Dialog>
 
       <div className="">
-        {/* Stats Cards - Uncomment if needed */}
-        {/* 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <div className="bg-cyan-100 border-0 p-6 rounded-lg">
-            <div className="flex items-start justify-between mb-4">
-              <div className="bg-white rounded-lg p-3">
-                <Image src="/icons/transfer/total.png" alt="Total" width={24} height={24} />
-              </div>
-              <span className="text-3xl font-bold text-gray-900">{stats.totalRequests}</span>
-            </div>
-            <h3 className="text-cyan-600 font-medium">Total Transfer Requests</h3>
-          </div>
-
-          <div className="bg-orange-50 border-0 p-6 rounded-lg">
-            <div className="flex items-start justify-between mb-4">
-              <div className="bg-white rounded-lg p-3">
-                <Image src="/icons/transfer/pending.png" alt="Pending" width={24} height={24} />
-              </div>
-              <span className="text-3xl font-bold text-gray-900">{stats.pendingRequests}</span>
-            </div>
-            <h3 className="text-orange-400 font-medium">Pending Requests</h3>
-          </div>
-
-          <div className="bg-blue-50 border-0 p-6 rounded-lg">
-            <div className="flex items-start justify-between mb-4">
-              <div className="bg-white rounded-lg p-3">
-                <Image src="/icons/transfer/in-progress.png" alt="In Progress" width={24} height={24} />
-              </div>
-              <span className="text-3xl font-bold text-gray-900">{stats.inProgressRequests}</span>
-            </div>
-            <h3 className="text-blue-500 font-medium">In Progress</h3>
-          </div>
-
-          <div className="bg-green-100 border-0 p-6 rounded-lg">
-            <div className="flex items-start justify-between mb-4">
-              <div className="bg-white rounded-lg p-3">
-                <Image src="/icons/transfer/completed.png" alt="Completed" width={24} height={24} />
-              </div>
-              <span className="text-3xl font-bold text-gray-900">{stats.completedRequests}</span>
-            </div>
-            <h3 className="text-green-600 font-medium">Completed</h3>
-          </div>
-        </div>
-        */}
-
         {/* Main Content */}
         <div className="bg-white rounded-lg shadow-sm">
           {/* Header */}
@@ -551,13 +484,13 @@ export default function PrescriptionTransferRequests() {
                 <Input
                   placeholder="Search by patient name, pharmacy, medication..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                   className="pl-10 bg-gray-50 border-gray-200"
                 />
               </div>
               <select
                 value={dateRange}
-                onChange={(e) => setDateRange(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setDateRange(e.target.value)}
                 className="w-[180px] px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
                 <option value="all">All Dates</option>
@@ -585,7 +518,7 @@ export default function PrescriptionTransferRequests() {
               </thead>
               <tbody>
                 {currentData.length > 0 ? (
-                  currentData.map((item) => (
+                  currentData.map((item: TransformedTransferRequest) => (
                     <tr key={item._id} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm text-gray-900">{item.no}</td>
                       <td className="px-6 py-4 text-sm text-gray-900">{item.patientName}</td>

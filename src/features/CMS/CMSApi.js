@@ -9,10 +9,11 @@ export const CMSApi = baseApi.injectEndpoints({
         url: '/setting',
         method: 'PATCH',
         body: Object.fromEntries(
-          Object.entries(data).filter(([_, value]) => value)
+          Object.entries(data).filter(([, value]) => value !== undefined && value !== null)
         ),
       }),
     }),
+
 
     getCMS: builder.query({
       query: () => ({

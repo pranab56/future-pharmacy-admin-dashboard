@@ -12,7 +12,6 @@ import {
 import {
   Info as AboutIcon,
   ArrowRightLeft,
-  BarChart3,
   Bell,
   Calendar,
   Car,
@@ -25,7 +24,7 @@ import {
   RefreshCw,
   Settings,
   FileText as TermsIcon,
-  Users,
+  Users
 } from "lucide-react";
 import Image from 'next/image';
 import Link from "next/link";
@@ -43,7 +42,7 @@ const sidebars: SidebarItem[] = [
   { name: "Overview", path: "/", icon: LayoutDashboard },
   { name: "Users", path: "/users", icon: Users },
   { name: "Prescription Req...", path: "/prescription-requests", icon: FileText },
-  // { name: "Pharmacy Request", path: "/pharmacy-request", icon: FileText },
+  { name: "partner-pharmacy", path: "/partner-pharmacy", icon: FileText },
   { name: "Drivers", path: "/drivers", icon: Car },
   { name: "Refill a Prescription", path: "/refill-prescription", icon: RefreshCw },
   { name: "Transfer a Prescr...", path: "/transfer-prescription", icon: ArrowRightLeft },
@@ -52,7 +51,7 @@ const sidebars: SidebarItem[] = [
   { name: "Payments", path: "/payments", icon: CreditCard },
   { name: "Create Blogs", path: "/blogs", icon: CreditCard },
   { name: "Notifications", path: "/notifications", icon: Bell },
-  { name: "Reports", path: "/reports", icon: BarChart3 },
+  // { name: "Reports", path: "/reports", icon: BarChart3 },
   {
     name: "Settings",
     path: "/settings",

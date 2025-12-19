@@ -31,6 +31,15 @@ interface ChartData {
   monthNumber: number;
 }
 
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    value: number;
+    color?: string;
+  }>;
+  label?: string;
+}
+
 const monthNames = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
@@ -43,7 +52,7 @@ function RevenueChart() {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 3 }, (_, i) => currentYear - i);
 
-  const { data, isLoading, refetch } = useReveniewResioQuery(selectedYear);
+  const { data, isLoading } = useReveniewResioQuery(selectedYear);
 
   const LoadingFc = () => {
     return (
@@ -70,12 +79,11 @@ function RevenueChart() {
   const handleYearChange = (year: string) => {
     const yearNum = parseInt(year);
     setSelectedYear(yearNum);
-    // The query will automatically refetch with new year parameter
   };
 
   // Custom tooltip component
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
+  const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
+    if (active && payload && payload.length > 0) {
       return (
         <div className="relative flex flex-col gap-2 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-sm min-w-[180px]">
           <div className="font-semibold text-gray-800 mb-1">{label}</div>

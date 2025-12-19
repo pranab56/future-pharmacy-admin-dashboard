@@ -1,19 +1,23 @@
 "use client";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -21,50 +25,75 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { format } from 'date-fns';
-import { ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
-import Image from 'next/image';
-import { useState } from 'react';
 
-// Define interfaces
-interface Notification {
-  id: string;
-  recipient: string;
-  role: string;
-  title: string;
-  dateTime: string;
-  status: 'Sent' | 'Pending' | 'Failed';
-}
+import {
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Loader2,
+  MoreVertical,
+  Search,
+  Trash2
+} from 'lucide-react';
+import { useState } from 'react';
+import {
+  useAllDeleteNotificationMutation,
+  useAllReadNotificationMutation,
+  useGetAllNotificationQuery,
+  useSingleDeleteNotificationMutation,
+  useSingleReadNotificationMutation
+} from '../../../features/notification/notificationApi';
+import { ApiResponse, FrontendStatus } from './type';
+import { RTKError } from '../../../utils/types';
+import toast from 'react-hot-toast';
 
 const NotificationSystem = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [dateRange, setDateRange] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [page, setPage] = useState<number>(1);
+  const [limit] = useState<number>(10);
+  const [selectedNotification, setSelectedNotification] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
 
-  // Form state
-  const [audience, setAudience] = useState<string>('patients');
-  const [notificationType, setNotificationType] = useState<string>('request-update');
-  const [emailSearch, setEmailSearch] = useState<string>('');
-  const [messageTitle, setMessageTitle] = useState<string>('');
-  const [messageContent, setMessageContent] = useState<string>('');
-  const [date, setDate] = useState<Date | undefined>(undefined);
+  // Fetch data with pagination
+  const { data, isLoading, error, refetch } = useGetAllNotificationQuery({ page, limit });
 
-  // Sample notification data
-  const notifications: Notification[] = [
-    { id: '#78578', recipient: 'Driver: Alex', role: 'Driver', title: 'New Order Assigned', dateTime: '2025-07-12 10:00 AM', status: 'Sent' },
-    { id: '#78578', recipient: 'Driver: Alex', role: 'Driver', title: 'New Order Assigned', dateTime: '2025-07-12 10:00 AM', status: 'Pending' },
-    { id: '#78578', recipient: 'Driver: Alex', role: 'Driver', title: 'New Order Assigned', dateTime: '2025-07-12 10:00 AM', status: 'Failed' },
-    { id: '#78578', recipient: 'Driver: Alex', role: 'Driver', title: 'New Order Assigned', dateTime: '2025-07-12 10:00 AM', status: 'Sent' },
-    { id: '#78578', recipient: 'Driver: Alex', role: 'Driver', title: 'New Order Assigned', dateTime: '2025-07-12 10:00 AM', status: 'Pending' },
-    { id: '#78578', recipient: 'Driver: Alex', role: 'Driver', title: 'New Order Assigned', dateTime: '2025-07-12 10:00 AM', status: 'Sent' },
-    { id: '#78578', recipient: 'Driver: Alex', role: 'Driver', title: 'New Order Assigned', dateTime: '2025-07-12 10:00 AM', status: 'Failed' },
-    { id: '#78578', recipient: 'Driver: Alex', role: 'Driver', title: 'New Order Assigned', dateTime: '2025-07-12 10:00 AM', status: 'Sent' },
-    { id: '#78578', recipient: 'Driver: Alex', role: 'Driver', title: 'New Order Assigned', dateTime: '2025-07-12 10:00 AM', status: 'Pending' },
-  ];
+  // Mutation hooks
+  const [readSingleNotification, { isLoading: isReadLoading }] = useSingleReadNotificationMutation();
+  const [readAllNotification, { isLoading: isReadAllLoading }] = useAllReadNotificationMutation();
+  const [deleteAllNotification, { isLoading: isDeleteAllLoading }] = useAllDeleteNotificationMutation();
+  const [deleteSingleNotification, { isLoading: isDeleteSingleLoading }] = useSingleDeleteNotificationMutation();
 
-  const getStatusColor = (status: Notification['status']): string => {
+  const apiData = data as ApiResponse;
+  // Map API status to frontend status
+  const mapApiStatus = (apiStatus: string): FrontendStatus => {
+    switch (apiStatus.toLowerCase()) {
+      case 'sent':
+        return 'Sent';
+      case 'pending':
+        return 'Pending';
+      case 'failed':
+        return 'Failed';
+      default:
+        return 'Pending';
+    }
+  };
+
+  // Format date
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).replace(',', '');
+  };
+
+  const getStatusColor = (status: FrontendStatus): string => {
     switch (status) {
       case 'Sent':
         return 'bg-green-100 text-green-700';
@@ -77,65 +106,220 @@ const NotificationSystem = () => {
     }
   };
 
-  const handleSendNotification = (): void => {
-    console.log({
-      audience,
-      notificationType,
-      emailSearch,
-      messageTitle,
-      messageContent,
-      date: date ? format(date, 'MM/dd/yyyy') : ''
-    });
-    setIsDialogOpen(false);
-    // Reset form
-    setAudience('patients');
-    setNotificationType('request-update');
-    setEmailSearch('');
-    setMessageTitle('');
-    setMessageContent('');
-    setDate(undefined);
+  const getReadStatusColor = (isRead: boolean): string => {
+    return isRead ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700';
   };
+
+  // Handle single notification read
+  const handleReadNotification = async (id: string) => {
+    try {
+      await readSingleNotification(id).unwrap();
+
+      refetch(); // Refresh the data
+    } catch (error: unknown) {
+      const err = error as RTKError;
+      toast.error(err?.data?.message || 'Failed to delete blog');
+    }
+  };
+
+  // Handle all notifications read
+  const handleReadAllNotifications = async () => {
+    try {
+      const response = await readAllNotification({}).unwrap();
+      console.log(response);
+      refetch(); // Refresh the data
+    } catch (error) {
+      console.log(error)
+    }
+  };
+
+  // Handle single notification delete
+  const handleDeleteNotification = async () => {
+    if (!selectedNotification) return;
+
+    try {
+      const response = await deleteSingleNotification(selectedNotification).unwrap();
+      console.log(response);
+
+      setShowDeleteDialog(false);
+      setSelectedNotification(null);
+      refetch(); // Refresh the data
+    } catch (error) {
+      console.log(error)
+    }
+  };
+
+  // Handle all notifications delete
+  const handleDeleteAllNotifications = async () => {
+    try {
+      const response = await deleteAllNotification({}).unwrap();
+      console.log(response);
+      setShowDeleteAllDialog(false);
+      refetch(); // Refresh the data
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // Confirm delete dialog for single notification
+  const confirmDelete = (id: string) => {
+    setSelectedNotification(id);
+    setShowDeleteDialog(true);
+  };
+
+  // Confirm delete all dialog
+  const confirmDeleteAll = () => {
+    setShowDeleteAllDialog(true);
+  };
+
+  // Filter notifications based on search and status
+  const filteredNotifications = apiData?.data?.filter(notification => {
+    const matchesSearch =
+      searchQuery === '' ||
+      notification.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      notification.role.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === 'all' ||
+      notification.status.toLowerCase() === statusFilter.toLowerCase();
+
+    return matchesSearch && matchesStatus;
+  }) || [];
+
+  // Handle pagination
+  const handlePrevPage = () => {
+    if (page > 1) {
+      setPage(prev => prev - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (apiData?.meta && page < apiData.meta.totalPage) {
+      setPage(prev => prev + 1);
+    }
+  };
+
+  // Render pagination buttons
+  const renderPaginationButtons = () => {
+    if (!apiData?.meta) return null;
+
+    const buttons = [];
+    const totalPages = apiData.meta.totalPage;
+    const currentPage = apiData.meta.page;
+
+    // Always show first page
+    buttons.push(
+      <Button
+        key={1}
+        variant={currentPage === 1 ? "default" : "outline"}
+        size="sm"
+        onClick={() => setPage(1)}
+        className={currentPage === 1 ? " text-white" : ""}
+      >
+        01
+      </Button>
+    );
+
+    // Show pages around current page
+    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+      if (i > 1 && i < totalPages) {
+        buttons.push(
+          <Button
+            key={i}
+            variant={currentPage === i ? "default" : "outline"}
+            size="sm"
+            onClick={() => setPage(i)}
+            className={currentPage === i ? " text-white" : ""}
+          >
+            {i.toString().padStart(2, '0')}
+          </Button>
+        );
+      }
+    }
+
+    // Always show last page if there's more than 1 page
+    if (totalPages > 1) {
+      buttons.push(
+        <Button
+          key={totalPages}
+          variant={currentPage === totalPages ? "default" : "outline"}
+          size="sm"
+          onClick={() => setPage(totalPages)}
+          className={currentPage === totalPages ? " text-white" : ""}
+        >
+          {totalPages.toString().padStart(2, '0')}
+        </Button>
+      );
+    }
+
+    return buttons;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-red-600">Error loading notifications. Please try again.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="">
       <div className="">
         {/* Header */}
-
-
-        {/* Filters */}
         <div className="bg-white rounded-lg shadow-sm p-5">
-
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-semibold text-gray-900">Notification History</h1>
-            <Button
-              onClick={() => setIsDialogOpen(true)}
-              className=" text-white"
-            >
-              <Image src="/icons/overview/assign.png" alt="view details" width={20} height={20} /> Send New Notification
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReadAllNotifications}
+                disabled={isReadAllLoading || filteredNotifications.length === 0}
+              >
+                {isReadAllLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                )}
+                Mark All as Read
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={confirmDeleteAll}
+                disabled={isDeleteAllLoading || filteredNotifications.length === 0}
+              >
+                {isDeleteAllLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <Trash2 className="w-4 h-4 mr-2" />
+                )}
+                Delete All
+              </Button>
+            </div>
           </div>
+
+          {/* Filters */}
           <div className="flex gap-4 pt-5">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
                 type="text"
-                placeholder="Type Something"
+                placeholder="Search by message or role..."
                 value={searchQuery}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
             </div>
-            <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Date Range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Dates</SelectItem>
-                <SelectItem value="today">Today</SelectItem>
-                <SelectItem value="week">This Week</SelectItem>
-                <SelectItem value="month">This Month</SelectItem>
-              </SelectContent>
-            </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Status: All" />
@@ -155,175 +339,176 @@ const NotificationSystem = () => {
               <thead className="bg-gray-50 border-y border-gray-200">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Notif. ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Recipient</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Recipient ID</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Title</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Message</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Date/Time</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Read Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {notifications.map((notif, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-900">{notif.id}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{notif.recipient}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{notif.role}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{notif.title}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{notif.dateTime}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(notif.status)}`}>
-                        {notif.status}
-                      </span>
+                {filteredNotifications.length > 0 ? (
+                  filteredNotifications.map((notification) => (
+                    <tr
+                      key={notification._id}
+                      className={`hover:bg-gray-50 ${notification.isRead ? '' : 'bg-blue-50'}`}
+                    >
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        #{notification._id.slice(-6).toUpperCase()}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {notification.userId ? notification.userId.slice(-6).toUpperCase() : 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900 capitalize">
+                        {notification.role}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {notification.message}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {formatDate(notification.createdAt)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getReadStatusColor(notification.isRead)}`}>
+                          {notification.isRead ? 'Read' : 'Unread'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(mapApiStatus(notification.status))}`}>
+                          {mapApiStatus(notification.status)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleReadNotification(notification._id)}
+                              disabled={notification.isRead || isReadLoading}
+                              className="cursor-pointer"
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              {notification.isRead ? 'Already Read' : 'Mark as Read'}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => confirmDelete(notification._id)}
+                              disabled={isDeleteSingleLoading}
+                              className="cursor-pointer text-red-600"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                      No notifications found
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
 
           {/* Pagination */}
-          <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200">
-            <div className="text-sm text-gray-600">
-              Showing 1 to 10 of 24 entries
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" disabled>
-                <ChevronLeft className="w-4 h-4" />
-                Prev
-              </Button>
-              <Button className=" text-white" size="sm">01</Button>
-              <Button variant="outline" size="sm">02</Button>
-              <Button variant="outline" size="sm">03</Button>
-              <Button variant="outline" size="sm">04</Button>
-              <Button variant="outline" size="sm">05</Button>
-              <span className="px-2">...</span>
-              <Button variant="outline" size="sm">24</Button>
-              <Button variant="outline" size="sm">
-                Next
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Send Notification Dialog */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-semibold">Send Notification</DialogTitle>
-              <button
-                onClick={() => setIsDialogOpen(false)}
-                className="absolute cursor-pointer right-4 top-4 rounded-sm opacity-70 hover:opacity-100"
-              >
-                <X className="h-4 w-4 cursor-pointer" />
-              </button>
-            </DialogHeader>
-
-            <div className="space-y-4 pt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className='w-full'>
-                  <label className="text-sm font-medium mb-2 block">Audience</label>
-                  <Select value={audience} onValueChange={setAudience}>
-                    <SelectTrigger className='w-full'>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="patients">Patients</SelectItem>
-                      <SelectItem value="drivers">Drivers</SelectItem>
-                      <SelectItem value="staff">Staff</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className='w-full'>
-                  <label className="text-sm font-medium mb-2 block">Notification Type</label>
-                  <Select value={notificationType} onValueChange={setNotificationType}>
-                    <SelectTrigger className='w-full'>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="request-update">Request Update</SelectItem>
-                      <SelectItem value="general">General</SelectItem>
-                      <SelectItem value="urgent">Urgent</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+          {apiData?.meta && (
+            <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200">
+              <div className="text-sm text-gray-600">
+                Showing {((apiData.meta.page - 1) * apiData.meta.limit) + 1} to{' '}
+                {Math.min(apiData.meta.page * apiData.meta.limit, apiData.meta.total)} of{' '}
+                {apiData.meta.total} entries
               </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Email Address</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    type="text"
-                    placeholder="Search by name or ID"
-                    value={emailSearch}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmailSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Message Title</label>
-                <Input
-                  type="text"
-                  placeholder="e.g Important Update on Your Delivery"
-                  value={messageTitle}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMessageTitle(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Message Content</label>
-                <Textarea
-                  placeholder="Type your message here..."
-                  value={messageContent}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setMessageContent(e.target.value)}
-                  className="min-h-32 resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Date</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                    >
-                      {date ? format(date, "MM/dd/yyyy") : <span className="text-gray-500">MM/DD/YYYY</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={date}
-                      onSelect={setDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4">
+              <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                  className="text-primary"
+                  size="sm"
+                  onClick={handlePrevPage}
+                  disabled={apiData.meta.page === 1}
                 >
-                  Cancel
+                  <ChevronLeft className="w-4 h-4" />
+                  Prev
                 </Button>
+
+                {renderPaginationButtons()}
+
                 <Button
-                  onClick={handleSendNotification}
-                  className=" text-white"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNextPage}
+                  disabled={apiData.meta.page >= apiData.meta.totalPage}
                 >
-                  Send now
+                  Next
+                  <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
+          )}
+        </div>
       </div>
+
+      {/* Delete Single Notification Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the notification.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleteSingleLoading}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteNotification}
+              disabled={isDeleteSingleLoading}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleteSingleLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : null}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete All Notifications Dialog */}
+      <AlertDialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete All Notifications</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will delete all notifications. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleteAllLoading}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAllNotifications}
+              disabled={isDeleteAllLoading}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleteAllLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : null}
+              Delete All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

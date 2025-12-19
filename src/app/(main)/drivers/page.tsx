@@ -70,8 +70,14 @@ export default function AllDriverList() {
   );
 
   // Type guard to check if we have valid data
-  const isApiDataValid = (data: any): data is ApiResponse => {
-    return data && data.success && Array.isArray(data.data);
+  const isApiDataValid = (data: unknown): data is ApiResponse => {
+    if (!data || typeof data !== 'object') return false;
+
+    const apiResponse = data as Partial<ApiResponse>;
+    return (
+      apiResponse.success === true &&
+      Array.isArray(apiResponse.data)
+    );
   };
 
   // Use API data if available, otherwise use empty array
@@ -239,7 +245,7 @@ export default function AllDriverList() {
                     </td>
                   </tr>
                 ) : (
-                  currentData.map((driver, index) => (
+                  currentData.map((driver) => (
                     <tr key={driver._id} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm text-gray-900">{getDriverId(driver._id)}</td>
                       <td className="px-6 py-4 text-sm text-gray-900">{driver.name}</td>

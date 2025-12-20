@@ -356,7 +356,7 @@ export default function UserManagement() {
                 </tr>
               ) : (
                 currentUsers.map((user) => {
-                  const userStatus = getUserStatus(user.isActive);
+                  // const userStatus = getUserStatus(user.isActive);
                   const userRole = getUserRole(user.role);
 
                   return (

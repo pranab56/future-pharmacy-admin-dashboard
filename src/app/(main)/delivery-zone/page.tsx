@@ -22,6 +22,12 @@ interface DeliveryZone {
   updatedAt?: string;
 }
 
+interface RTKError {
+  data?: {
+    message?: string;
+  };
+}
+
 const DeliveryZoneTable = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedZone, setSelectedZone] = useState<DeliveryZone | null>(null);
@@ -134,9 +140,9 @@ const DeliveryZoneTable = () => {
 
       // Refetch data
       refetch();
-    } catch (error: any) {
-      console.error('Error creating delivery zone:', error);
-      toast.error(error?.data?.message || 'Failed to create delivery zone');
+    } catch (error: unknown) {
+      const err = error as RTKError;
+      toast.error(err?.data?.message || 'Failed to create delivery zone');
     }
   };
 
@@ -158,9 +164,9 @@ const DeliveryZoneTable = () => {
 
       // Refetch data
       refetch();
-    } catch (error: any) {
-      console.error('Error deleting delivery zone:', error);
-      toast.error(error?.data?.message || 'Failed to delete delivery zone');
+    } catch (error: unknown) {
+      const err = error as RTKError;
+      toast.error(err?.data?.message || 'Failed to delete delivery zone');
     }
   };
 

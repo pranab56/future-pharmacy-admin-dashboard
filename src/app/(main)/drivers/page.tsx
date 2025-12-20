@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -127,28 +126,28 @@ export default function AllDriverList() {
     return pages;
   };
 
-  const getStatusBadgeClass = (status: string): string => {
-    const statusLower = status.toLowerCase();
-    if (statusLower === 'available') {
-      return 'bg-green-100 text-green-700 hover:bg-green-100';
-    } else if (statusLower === 'pending') {
-      return 'bg-yellow-100 text-yellow-700 hover:bg-yellow-100';
-    } else if (statusLower === 'active') {
-      return 'bg-blue-100 text-blue-700 hover:bg-blue-100';
-    } else if (statusLower === 'ondelivery' || statusLower === 'on delivery') {
-      return 'bg-purple-100 text-purple-700 hover:bg-purple-100';
-    } else {
-      return 'bg-gray-100 text-gray-700 hover:bg-gray-100';
-    }
-  };
+  // const getStatusBadgeClass = (status: string): string => {
+  //   const statusLower = status.toLowerCase();
+  //   if (statusLower === 'available') {
+  //     return 'bg-green-100 text-green-700 hover:bg-green-100';
+  //   } else if (statusLower === 'pending') {
+  //     return 'bg-yellow-100 text-yellow-700 hover:bg-yellow-100';
+  //   } else if (statusLower === 'active') {
+  //     return 'bg-blue-100 text-blue-700 hover:bg-blue-100';
+  //   } else if (statusLower === 'ondelivery' || statusLower === 'on delivery') {
+  //     return 'bg-purple-100 text-purple-700 hover:bg-purple-100';
+  //   } else {
+  //     return 'bg-gray-100 text-gray-700 hover:bg-gray-100';
+  //   }
+  // };
 
-  const formatStatus = (status: string): string => {
-    const statusLower = status.toLowerCase();
-    if (statusLower === 'ondelivery') {
-      return 'On Delivery';
-    }
-    return status.charAt(0).toUpperCase() + status.slice(1);
-  };
+  // const formatStatus = (status: string): string => {
+  //   const statusLower = status.toLowerCase();
+  //   if (statusLower === 'ondelivery') {
+  //     return 'On Delivery';
+  //   }
+  //   return status.charAt(0).toUpperCase() + status.slice(1);
+  // };
 
   // Get driver ID from _id (use last 6 characters or whole ID)
   const getDriverId = (id: string): string => {

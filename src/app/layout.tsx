@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
-import "./globals.css";
+import ProtectedRoute from '../components/ProtectedRoute';
 import ClientLayout from './ClientLayout';
+import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-   <html lang="en">
+    <html lang="en">
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="manifest" href="/site.webmanifest" />
@@ -37,10 +38,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable}   antialiased h-screen`}
       >
-        <ClientLayout>
-          {children}
-          <Toaster />
-        </ClientLayout>
+        <ProtectedRoute>
+          <ClientLayout>
+            {children}
+            <Toaster />
+          </ClientLayout>
+        </ProtectedRoute>
       </body>
     </html>
   );

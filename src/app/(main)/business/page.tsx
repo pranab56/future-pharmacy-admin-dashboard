@@ -22,7 +22,7 @@ import React, { ReactElement, ReactNode, useState } from 'react';
 import { Button } from '../../../components/ui/button';
 import { useGetAllDriverQuery } from '../../../features/driver/driverApi';
 import { useGetAllPharmacyQuery } from "../../../features/fharmacy/fharmacyApi";
-import { useGetAllInvestorsQuery } from "../../../features/investor/InvestorApi";
+import { useGetAllInvestorsQuery } from "../../../features/investor/investorApi";
 import { CustomLoading } from '../../../hooks/CustomLoading';
 import { useCSVDownload } from '../../../hooks/useCSVDownload';
 import { useDownloadPDF } from '../../../hooks/useDownloadPDF';

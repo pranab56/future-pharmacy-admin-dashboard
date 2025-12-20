@@ -42,7 +42,8 @@ const sidebars: SidebarItem[] = [
   { name: "Overview", path: "/", icon: LayoutDashboard },
   { name: "Users", path: "/users", icon: Users },
   { name: "Prescription Req...", path: "/prescription-requests", icon: FileText },
-  { name: "partner-pharmacy", path: "/partner-pharmacy", icon: FileText },
+  { name: "partner pharmacy", path: "/partner-pharmacy", icon: FileText },
+  { name: "delivery zone", path: "/delivery-zone", icon: FileText },
   { name: "Drivers", path: "/drivers", icon: Car },
   { name: "Refill a Prescription", path: "/refill-prescription", icon: RefreshCw },
   { name: "Transfer a Prescr...", path: "/transfer-prescription", icon: ArrowRightLeft },
@@ -59,7 +60,7 @@ const sidebars: SidebarItem[] = [
     subItems: [
       { name: "Terms & Conditions", path: "/settings/terms", icon: TermsIcon },
       { name: "Privacy Policy", path: "/settings/privacy", icon: PrivacyIcon },
-      { name: "About", path: "/settings/about", icon: AboutIcon },
+      { name: "Hipaa Policy", path: "/settings/hipaa", icon: AboutIcon },
     ]
   },
 ];

@@ -98,13 +98,13 @@ const PharmacyForm = ({ formData, handleInputChange, handleFileChange, setFormDa
       />
     </div>
 
-    <div className="space-y-2">
+    <div className="space-y-2 w-full">
       <Label htmlFor="status">Status *</Label>
       <Select
         value={formData.status}
         onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
       >
-        <SelectTrigger>
+        <SelectTrigger className='w-full'>
           <SelectValue placeholder="Select status" />
         </SelectTrigger>
         <SelectContent>

@@ -14,7 +14,7 @@ import { RTKError } from '../../../../utils/types';
 
 const AboutPage = () => {
   const [content, setContent] = useState<string>("");
-  const [title] = useState<string>("About Us");
+  const [title] = useState<string>("HIPAA Policy");
   const [hasDataLoaded, setHasDataLoaded] = useState<boolean>(false);
 
   // Fetch CMS data
@@ -42,7 +42,7 @@ const AboutPage = () => {
 
   const handleUpdate = async () => {
     if (isContentEmpty(content)) {
-      toast.error("About content cannot be empty");
+      toast.error("HIPAA content cannot be empty");
       return;
     }
 
@@ -65,7 +65,7 @@ const AboutPage = () => {
         <Card>
           <CardContent className="flex justify-center items-center h-64">
             <Loader2 className="h-8 w-8 animate-spin" />
-            <p className="ml-2">Loading About...</p>
+            <p className="ml-2">Loading Hipaa...</p>
           </CardContent>
         </Card>
       </div>

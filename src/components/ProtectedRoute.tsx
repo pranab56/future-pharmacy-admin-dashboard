@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
+import { CustomLoading } from '../hooks/CustomLoading';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -28,8 +29,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (isChecking) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <p className="text-lg font-medium">Checking authentication...</p>
+      <div className='h-[600px] flex justify-center items-center'>
+        <CustomLoading />
       </div>
     );
   }

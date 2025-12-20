@@ -342,7 +342,7 @@ export default function UserManagement() {
                 <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">Phone</th>
                 <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">Email</th>
                 <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">Role</th>
-                <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">Status</th>
+                {/* <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">Status</th> */}
                 <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">Joined Date</th>
                 <th className="text-left py-4 px-4 text-sm font-medium text-gray-700">Action</th>
               </tr>
@@ -376,11 +376,11 @@ export default function UserManagement() {
                       <td className="py-4 px-4 text-sm text-gray-900">
                         {userRole}
                       </td>
-                      <td className="py-4 px-4">
+                      {/* <td className="py-4 px-4">
                         <Badge variant={userStatus === 'Active' ? 'active' : 'inactive'}>
                           {userStatus}
                         </Badge>
-                      </td>
+                      </td> */}
                       <td className="py-4 px-4 text-sm text-gray-900">
                         {formatDate(user.createdAt)}
                       </td>

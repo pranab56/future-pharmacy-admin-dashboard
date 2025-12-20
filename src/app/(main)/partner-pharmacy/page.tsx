@@ -32,6 +32,7 @@ import { CustomLoading } from '../../../hooks/CustomLoading';
 import { useCSVDownload } from '../../../hooks/useCSVDownload';
 import { useDownloadPDF } from '../../../hooks/useDownloadPDF';
 import { useDownloadXlShit } from '../../../hooks/useDownloadXlShit';
+import { baseURL } from '../../../utils/BaseURL';
 import { RTKError } from '../../../utils/types';
 
 const PartnerPharmacyTable = () => {
@@ -45,7 +46,7 @@ const PartnerPharmacyTable = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
   const [pharmacyToDelete, setPharmacyToDelete] = useState<Pharmacy | null>(null);
 
-  // API থেকে ডাটা আনছি
+
   const { data: apiResponse, isLoading, error, refetch } = useGetAllPharmacyQuery({});
   const [createPharmacy] = useCreatePharmacyMutation();
   const [updatePharmacy] = useUpdatePharmacyMutation();
@@ -398,7 +399,7 @@ const PartnerPharmacyTable = () => {
                           <span className="font-medium text-gray-700 min-w-32">Logo:</span>
                           <div className="w-24 h-24 relative">
                             <Image
-                              src={`${process.env.NEXT_PUBLIC_API_URL || ''}${selectedPharmacy.logo}`}
+                              src={`${baseURL}/${selectedPharmacy.logo}`}
                               alt={selectedPharmacy.name}
                               fill
                               className="object-contain"
@@ -558,9 +559,9 @@ const PartnerPharmacyTable = () => {
                   <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
                     Phone
                   </th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                  {/* <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
                     Status
-                  </th>
+                  </th> */}
                   <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
                     Action
                   </th>
@@ -588,7 +589,7 @@ const PartnerPharmacyTable = () => {
                       <td className="px-6 py-4 text-sm text-gray-900">
                         {pharmacy.phone}
                       </td>
-                      <td className="px-6 py-4">
+                      {/* <td className="px-6 py-4">
                         <Badge
                           variant="secondary"
                           className={
@@ -601,7 +602,7 @@ const PartnerPharmacyTable = () => {
                         >
                           {pharmacy.status}
                         </Badge>
-                      </td>
+                      </td> */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <button

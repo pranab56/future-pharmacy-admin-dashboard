@@ -678,7 +678,7 @@ export default function HealthcareSchedule() {
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Service Type</th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Scheduled Date</th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Assigned Driver</th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Status</th>
+                {/* <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Status</th> */}
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Action</th>
               </tr>
             </thead>
@@ -709,14 +709,14 @@ export default function HealthcareSchedule() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">{item.assignedDriver}</td>
-                    <td className="px-6 py-4">
+                    {/* <td className="px-6 py-4">
                       <Badge
                         variant="secondary"
                         className={getStatusBadgeClass(item.status)}
                       >
                         {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
                       </Badge>
-                    </td>
+                    </td> */}
                     <td className="px-6 py-4">
                       <button
                         className="p-1 hover:bg-gray-100 cursor-pointer rounded transition-colors"

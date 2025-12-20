@@ -496,9 +496,9 @@ const PrescriptionRequestsTable = () => {
                   <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
                     Delivery Date/Time
                   </th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                  {/* <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
                     Status
-                  </th>
+                  </th> */}
                   <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
                     Action
                   </th>
@@ -531,7 +531,7 @@ const PrescriptionRequestsTable = () => {
                           <div className="text-xs text-gray-500">{formatTime(request.order.deliveryTime)}</div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      {/* <td className="px-6 py-4">
                         <Badge
                           className={
                             request.order.status === 'completed'
@@ -543,7 +543,7 @@ const PrescriptionRequestsTable = () => {
                         >
                           {request.order.status.charAt(0).toUpperCase() + request.order.status.slice(1)}
                         </Badge>
-                      </td>
+                      </td> */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <button
@@ -620,7 +620,7 @@ const PrescriptionRequestsTable = () => {
           )}
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 

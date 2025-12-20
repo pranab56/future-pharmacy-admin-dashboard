@@ -547,7 +547,7 @@ export default function PrescriptionTransferRequests() {
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Transfer To</th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">RX ID</th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Date</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Status</th>
+                  {/* <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Status</th> */}
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Action</th>
                 </tr>
               </thead>
@@ -568,7 +568,7 @@ export default function PrescriptionTransferRequests() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">{item.date}</td>
-                      <td className="px-6 py-4">
+                      {/* <td className="px-6 py-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${item.status === 'pending'
                           ? 'bg-yellow-100 text-yellow-800'
                           : item.status === 'completed' || item.status === 'approved'
@@ -579,7 +579,7 @@ export default function PrescriptionTransferRequests() {
                           }`}>
                           {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
                         </span>
-                      </td>
+                      </td> */}
                       <td className="px-6 py-4">
                         <button
                           className="p-1 hover:bg-gray-100 rounded transition-colors"

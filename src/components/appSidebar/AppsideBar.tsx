@@ -13,17 +13,21 @@ import {
   Info as AboutIcon,
   ArrowRightLeft,
   Bell,
+  Building,
   Calendar,
   Car,
   ChevronDown,
   ChevronRight,
-  CreditCard,
-  FileText,
+  ClipboardList,
+  DollarSign,
+  FileText as FileTextIcon,
   LayoutDashboard,
-  Shield as PrivacyIcon,
+  MapPin,
+  Newspaper,
   RefreshCw,
   Settings,
-  FileText as TermsIcon,
+  Shield as ShieldIcon,
+  ShoppingBag,
   Users
 } from "lucide-react";
 import Image from 'next/image';
@@ -41,26 +45,26 @@ type SidebarItem = {
 const sidebars: SidebarItem[] = [
   { name: "Overview", path: "/", icon: LayoutDashboard },
   { name: "Users", path: "/users", icon: Users },
-  { name: "Prescription Req...", path: "/prescription-requests", icon: FileText },
-  { name: "partner pharmacy", path: "/partner-pharmacy", icon: FileText },
-  { name: "delivery zone", path: "/delivery-zone", icon: FileText },
-  { name: "Drivers", path: "/drivers", icon: Car },
-  { name: "Refill a Prescription", path: "/refill-prescription", icon: RefreshCw },
-  { name: "Transfer a Prescr...", path: "/transfer-prescription", icon: ArrowRightLeft },
+  { name: "Prescription Requests", path: "/prescription-requests", icon: ClipboardList },
+  { name: "Refill Rx", path: "/refill-prescription", icon: RefreshCw },
+  { name: "Transfer Rx", path: "/transfer-prescription", icon: ArrowRightLeft },
   { name: "Schedule Essential", path: "/schedule-essential", icon: Calendar },
-  { name: "Business", path: "/business", icon: Calendar },
-  { name: "Payments", path: "/payments", icon: CreditCard },
-  { name: "Create Blogs", path: "/blogs", icon: CreditCard },
+  { name: "Partner Pharmacies", path: "/partner-pharmacy", icon: Building },
+  { name: "Business", path: "/business", icon: ShoppingBag },
+  { name: "Delivery Zone", path: "/delivery-zone", icon: MapPin },
+  { name: "Drivers", path: "/drivers", icon: Car },
+  { name: "Blog", path: "/blogs", icon: Newspaper },
+  { name: "Payments", path: "/payments", icon: DollarSign },
   { name: "Notifications", path: "/notifications", icon: Bell },
-  // { name: "Reports", path: "/reports", icon: BarChart3 },
+  { name: "Settings", path: "/settings", icon: Settings },
   {
-    name: "Settings",
-    path: "/settings",
-    icon: Settings,
+    name: "Compliance",
+    path: "/compliance",
+    icon: ShieldIcon,
     subItems: [
-      { name: "Terms & Conditions", path: "/settings/terms", icon: TermsIcon },
-      { name: "Privacy Policy", path: "/settings/privacy", icon: PrivacyIcon },
-      { name: "Hipaa Policy", path: "/settings/hipaa", icon: AboutIcon },
+      { name: "Terms & Conditions", path: "/compliance/terms", icon: FileTextIcon },
+      { name: "Privacy Policy", path: "/compliance/privacy", icon: ShieldIcon },
+      { name: "Hipaa Policy", path: "/compliance/hipaa", icon: AboutIcon },
     ]
   },
 ];
@@ -84,6 +88,10 @@ export default function OptimusSidebar() {
     return pathname.startsWith("/settings");
   };
 
+  const isComplianceActive = () => {
+    return pathname.startsWith("/compliance");
+  };
+
   return (
     <Sidebar className="border-none">
       <SidebarContent className="bg-[#9c4a8f] text-white relative">
@@ -92,7 +100,16 @@ export default function OptimusSidebar() {
           <SidebarGroup>
             {/* Logo Section */}
             <div className="flex flex-col items-center justify-center px-6 pt-8 pb-6 sticky top-0 bg-[#9c4a8f] z-10">
-              <Image src={"/icons/logo.png"} height={1000} width={1000} alt='dashboard logo' className='w-full h-full' />
+              <div className="relative w-full max-w-[180px] h-[60px]">
+                <Image
+                  src="/icons/logo.png"
+                  alt="Dashboard Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                  sizes="(max-width: 768px) 100px, 180px"
+                />
+              </div>
             </div>
 
             {/* Navigation Menu */}
@@ -100,7 +117,14 @@ export default function OptimusSidebar() {
               <SidebarMenu className="space-y-1">
                 {sidebars.map((item) => {
                   const hasSubItems = item.subItems && item.subItems.length > 0;
-                  const isItemActive = isActive(item.path) || (hasSubItems && isSettingsActive());
+                  let isItemActive = isActive(item.path);
+
+                  // Check for specific dropdown active states
+                  if (item.name === "Settings") {
+                    isItemActive = isItemActive || isSettingsActive();
+                  } else if (item.name === "Compliance") {
+                    isItemActive = isItemActive || isComplianceActive();
+                  }
 
                   return (
                     <React.Fragment key={item.name}>
@@ -108,32 +132,39 @@ export default function OptimusSidebar() {
                         {hasSubItems ? (
                           <button
                             onClick={() => toggleDropdown(item.name)}
-                            className={`w-full h-11 px-4 rounded-lg transition-colors flex items-center justify-between ${isItemActive
-                              ? "bg-white text-[#9c4a8f] hover:bg-white hover:text-[#9c4a8f]"
+                            className={`w-full h-11 px-4 rounded-lg transition-colors duration-200 flex items-center justify-between ${isItemActive
+                              ? "bg-white text-[#9c4a8f] hover:bg-white/90"
                               : "text-white hover:bg-white/10"
                               }`}
+                            aria-expanded={openDropdown === item.name}
+                            aria-label={`Toggle ${item.name} dropdown`}
                           >
                             <div className="flex items-center gap-3">
                               <item.icon className="h-5 w-5 shrink-0" />
                               <span className="text-[15px] font-medium">{item.name}</span>
                             </div>
                             {openDropdown === item.name ? (
-                              <ChevronDown className="h-4 w-4" />
+                              <ChevronDown className="h-4 w-4 transition-transform duration-200" />
                             ) : (
-                              <ChevronRight className="h-4 w-4" />
+                              <ChevronRight className="h-4 w-4 transition-transform duration-200" />
                             )}
                           </button>
                         ) : (
                           <SidebarMenuButton
                             asChild
-                            className={`h-11 px-4 rounded-lg transition-colors ${isItemActive
-                              ? "bg-white text-[#9c4a8f] hover:bg-white hover:text-[#9c4a8f] cursor-pointer"
-                              : "text-white hover:bg-white/10 cursor-pointer"
+                            className={`h-11 px-4 rounded-lg transition-colors duration-200 ${isItemActive
+                              ? "bg-white text-[#9c4a8f] hover:bg-white/90"
+                              : "text-white hover:bg-white/10"
                               }`}
+                            isActive={isItemActive}
                           >
-                            <Link href={item.path} className="flex items-center gap-3 cursor-pointer">
-                              <item.icon className="h-5 w-5 shrink-0 cursor-pointer" />
-                              <span className="text-[15px] font-medium cursor-pointer">{item.name}</span>
+                            <Link
+                              href={item.path}
+                              className="flex items-center gap-3 w-full"
+                              aria-current={isItemActive ? "page" : undefined}
+                            >
+                              <item.icon className="h-5 w-5 shrink-0" />
+                              <span className="text-[15px] font-medium">{item.name}</span>
                             </Link>
                           </SidebarMenuButton>
                         )}
@@ -148,14 +179,19 @@ export default function OptimusSidebar() {
                               <SidebarMenuItem key={subItem.path}>
                                 <SidebarMenuButton
                                   asChild
-                                  className={`h-10 px-4 rounded-lg transition-colors cursor-pointer ${isSubItemActive
-                                    ? "bg-white/20 text-white hover:bg-white/30 cursor-pointer"
-                                    : "text-white/80 hover:bg-white/10 cursor-pointer"
+                                  className={`h-10 px-4 rounded-lg transition-colors duration-200 ${isSubItemActive
+                                    ? "bg-white/20 text-white hover:bg-white/30"
+                                    : "text-white/80 hover:bg-white/10"
                                     }`}
+                                  isActive={isSubItemActive}
                                 >
-                                  <Link href={subItem.path} className="flex items-center gap-3 cursor-pointer">
-                                    <subItem.icon className="h-4 w-4 shrink-0 cursor-pointer" />
-                                    <span className="text-[14px] font-medium cursor-pointer">{subItem.name}</span>
+                                  <Link
+                                    href={subItem.path}
+                                    className="flex items-center gap-3 w-full"
+                                    aria-current={isSubItemActive ? "page" : undefined}
+                                  >
+                                    <subItem.icon className="h-4 w-4 shrink-0" />
+                                    <span className="text-[14px] font-medium">{subItem.name}</span>
                                   </Link>
                                 </SidebarMenuButton>
                               </SidebarMenuItem>

@@ -276,16 +276,16 @@ export default function UserProfilePage() {
     );
   }
 
-  if (!profileData) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Failed to load profile</div>
-      </div>
-    );
-  }
+  // if (!profileData) {
+  //   return (
+  //     <div className="flex items-center justify-center min-h-screen">
+  //       <div className="text-lg">Failed to load profile</div>
+  //     </div>
+  //   );
+  // }
 
   // Get profile image URL
-  const profileImageUrl = profileData.profile;
+  const profileImageUrl = profileData?.profile;
 
   return (
     <div className="">
@@ -310,27 +310,27 @@ export default function UserProfilePage() {
               <div className="grid grid-cols-3 gap-x-16 gap-y-6 flex-1">
                 <div>
                   <div className="text-sm text-gray-500 mb-1">First Name</div>
-                  <div className="text-base font-medium text-gray-900">{profileData.first_name || 'N/A'}</div>
+                  <div className="text-base font-medium text-gray-900">{profileData?.first_name || 'N/A'}</div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-500 mb-1">Last Name</div>
-                  <div className="text-base font-medium text-gray-900">{profileData.last_name || 'N/A'}</div>
+                  <div className="text-base font-medium text-gray-900">{profileData?.last_name || 'N/A'}</div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-500 mb-1">Role</div>
-                  <div className="text-base font-medium text-gray-900 capitalize">{profileData.role}</div>
+                  <div className="text-base font-medium text-gray-900 capitalize">{profileData?.role}</div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-500 mb-1">Email Address</div>
-                  <div className="text-base font-medium text-gray-900">{profileData.email}</div>
+                  <div className="text-base font-medium text-gray-900">{profileData?.email}</div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-500 mb-1">Phone Number</div>
-                  <div className="text-base font-medium text-gray-900">{profileData.phone || 'N/A'}</div>
+                  <div className="text-base font-medium text-gray-900">{profileData?.phone || 'N/A'}</div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-500 mb-1">Location</div>
-                  <div className="text-base font-medium text-gray-900">{profileData.location || 'N/A'}</div>
+                  <div className="text-base font-medium text-gray-900">{profileData?.location || 'N/A'}</div>
                 </div>
               </div>
             </div>
@@ -397,7 +397,7 @@ export default function UserProfilePage() {
               <div className="text-sm text-gray-500">Enable 2FA for enhanced security</div>
             </div>
             <Switch
-              checked={profileData.twoStepVerification}
+              checked={profileData?.twoStepVerification}
               onCheckedChange={handle2FAToggle}
               disabled={isEnabling2FA}
               className="data-[state=checked]:bg-primary cursor-pointer"

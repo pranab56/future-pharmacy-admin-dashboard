@@ -77,7 +77,7 @@ export default function LoginPage() {
 
         // Save token to storage
         if (response.data) {
-          saveToken(response.data);
+          saveToken(response.data?.accessToken);
           toast.success(response.message || 'Login successful!');
 
           // Redirect to home page

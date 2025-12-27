@@ -19,21 +19,21 @@ export const notificationApi = baseApi.injectEndpoints({
 
     allReadNotification: builder.mutation({
       query: () => ({
-        url: `/notification/all-read`,
+        url: `/notification/read`,
         method: "POST",
       }),
     }),
 
     allDeleteNotification: builder.mutation({
       query: () => ({
-        url: `/notification`,
+        url: `/notification/admin`,
         method: "DELETE",
       }),
     }),
 
     singleDeleteNotification: builder.mutation({
       query: (id) => ({
-        url: `/notification/${id}`,
+        url: `/notification/admin/${id}`,
         method: "DELETE",
       }),
     }),

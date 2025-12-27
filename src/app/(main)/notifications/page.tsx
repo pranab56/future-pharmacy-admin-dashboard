@@ -30,7 +30,6 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Eye,
   Loader2,
   MoreVertical,
   Search,
@@ -41,12 +40,9 @@ import {
   useAllDeleteNotificationMutation,
   useAllReadNotificationMutation,
   useGetAllNotificationQuery,
-  useSingleDeleteNotificationMutation,
-  useSingleReadNotificationMutation
+  useSingleDeleteNotificationMutation
 } from '../../../features/notification/notificationApi';
 import { ApiResponse, FrontendStatus } from './type';
-import { RTKError } from '../../../utils/types';
-import toast from 'react-hot-toast';
 
 const NotificationSystem = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -60,8 +56,6 @@ const NotificationSystem = () => {
   // Fetch data with pagination
   const { data, isLoading, error, refetch } = useGetAllNotificationQuery({ page, limit });
 
-  // Mutation hooks
-  const [readSingleNotification, { isLoading: isReadLoading }] = useSingleReadNotificationMutation();
   const [readAllNotification, { isLoading: isReadAllLoading }] = useAllReadNotificationMutation();
   const [deleteAllNotification, { isLoading: isDeleteAllLoading }] = useAllDeleteNotificationMutation();
   const [deleteSingleNotification, { isLoading: isDeleteSingleLoading }] = useSingleDeleteNotificationMutation();
@@ -108,18 +102,6 @@ const NotificationSystem = () => {
 
   const getReadStatusColor = (isRead: boolean): string => {
     return isRead ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700';
-  };
-
-  // Handle single notification read
-  const handleReadNotification = async (id: string) => {
-    try {
-      await readSingleNotification(id).unwrap();
-
-      refetch(); // Refresh the data
-    } catch (error: unknown) {
-      const err = error as RTKError;
-      toast.error(err?.data?.message || 'Failed to delete blog');
-    }
   };
 
   // Handle all notifications read
@@ -388,14 +370,7 @@ const NotificationSystem = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => handleReadNotification(notification._id)}
-                              disabled={notification.isRead || isReadLoading}
-                              className="cursor-pointer"
-                            >
-                              <Eye className="w-4 h-4 mr-2" />
-                              {notification.isRead ? 'Already Read' : 'Mark as Read'}
-                            </DropdownMenuItem>
+
                             <DropdownMenuItem
                               onClick={() => confirmDelete(notification._id)}
                               disabled={isDeleteSingleLoading}

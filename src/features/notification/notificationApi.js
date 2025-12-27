@@ -19,7 +19,7 @@ export const notificationApi = baseApi.injectEndpoints({
 
     allReadNotification: builder.mutation({
       query: () => ({
-        url: `/notification/read`,
+        url: `/notification/all-read`,
         method: "POST",
       }),
     }),

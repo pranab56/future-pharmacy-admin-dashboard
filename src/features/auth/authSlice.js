@@ -1,6 +1,6 @@
 
 import { createSlice } from "@reduxjs/toolkit";
-import { removeToken, saveToken } from "./authService";
+import { removeToken, saveToken } from "../../utils/storage";
 
 
 const initialState = {

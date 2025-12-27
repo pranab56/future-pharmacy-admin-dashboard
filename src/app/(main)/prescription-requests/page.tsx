@@ -494,7 +494,14 @@ const PrescriptionRequestsTable = () => {
                     Pharmacy Name
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                    Type(man)
+                  </th>
+
+                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
                     Delivery Date/Time
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                    Status
                   </th>
                   {/* <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
                     Status
@@ -527,8 +534,18 @@ const PrescriptionRequestsTable = () => {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">
                         <div>
+                          <div>{request.order.typeUser ? "Yes" : "No"}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        <div>
                           <div>{formatDate(request.order.deliveryDate)}</div>
                           <div className="text-xs text-gray-500">{formatTime(request.order.deliveryTime)}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        <div>
+                          <div>{request.order.status}</div>
                         </div>
                       </td>
                       {/* <td className="px-6 py-4">

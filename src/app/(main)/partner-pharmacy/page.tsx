@@ -54,9 +54,8 @@ const PartnerPharmacyTable = () => {
   const { downloadCSV } = useCSVDownload();
   const { downloadPDF } = useDownloadPDF();
   const { downloadExcel } = useDownloadXlShit();
-
-  // API থেকে পাওয়া ডাটা স্টেটে রাখছি
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
+  console.log("pharmacies", pharmacies);
 
 
 
@@ -76,6 +75,8 @@ const PartnerPharmacyTable = () => {
     yearofBusiness: '',
     message: '',
     status: 'pending',
+    licenseNumber: '',
+    businessPhoneNumber: '',
     latitude: '',
     longitude: '',
     logo: null
@@ -93,6 +94,8 @@ const PartnerPharmacyTable = () => {
       yearofBusiness: '',
       message: '',
       status: 'pending',
+      licenseNumber: '',
+      businessPhoneNumber: '',
       latitude: '',
       longitude: '',
       logo: null
@@ -124,6 +127,8 @@ const PartnerPharmacyTable = () => {
       yearofBusiness: pharmacy.yearofBusiness,
       message: pharmacy.message,
       status: pharmacy.status,
+      licenseNumber: pharmacy.licenseNumber,
+      businessPhoneNumber: pharmacy.businessPhoneNumber,
       latitude: pharmacy.latitude.toString(),
       longitude: pharmacy.longitude.toString(),
       logo: null
@@ -168,6 +173,8 @@ const PartnerPharmacyTable = () => {
     validData.append('yearofBusiness', formData.yearofBusiness);
     validData.append('message', formData.message);
     validData.append('status', formData.status);
+    validData.append('licenseNumber', formData.licenseNumber);
+    validData.append('businessPhoneNumber', formData.businessPhoneNumber);
     validData.append('latitude', formData.latitude);
     validData.append('longitude', formData.longitude);
     if (formData.logo) {
@@ -204,6 +211,8 @@ const PartnerPharmacyTable = () => {
     validData.append('yearofBusiness', formData.yearofBusiness);
     validData.append('message', formData.message);
     validData.append('status', formData.status);
+    validData.append('licenseNumber', formData.licenseNumber);
+    validData.append('businessPhoneNumber', formData.businessPhoneNumber);
     validData.append('latitude', formData.latitude);
     validData.append('longitude', formData.longitude);
     if (formData.logo) {
@@ -349,6 +358,14 @@ const PartnerPharmacyTable = () => {
                         <span className="font-medium text-gray-700 min-w-32">Email:</span>
                         <span className="text-gray-900">{selectedPharmacy.email}</span>
                       </div>
+                      <div className="flex items-start">
+                        <span className="font-medium text-gray-700 min-w-32">Bussiness Number: </span>
+                        <span className="text-gray-900"> {selectedPharmacy.businessPhoneNumber}</span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="font-medium text-gray-700 min-w-32">License Number:</span>
+                        <span className="text-gray-900">{selectedPharmacy.licenseNumber}</span>
+                      </div>
                     </div>
 
                     <div className="space-y-4">
@@ -356,6 +373,7 @@ const PartnerPharmacyTable = () => {
                         <span className="font-medium text-gray-700 min-w-32">Contact Person:</span>
                         <span className="text-gray-900">{selectedPharmacy.contactPerson}</span>
                       </div>
+
                       <div className="flex items-start">
                         <span className="font-medium text-gray-700 min-w-32">Title:</span>
                         <span className="text-gray-900">{selectedPharmacy.title}</span>
@@ -381,7 +399,7 @@ const PartnerPharmacyTable = () => {
                       </div>
                     </div>
 
-                    <div className="md:col-span-2 space-y-4">
+                    <div className="md:col-span-1  space-y-4">
                       <div className="flex items-start">
                         <span className="font-medium text-gray-700 min-w-32">Latitude:</span>
                         <span className="text-gray-900">{selectedPharmacy.latitude}</span>
@@ -408,6 +426,7 @@ const PartnerPharmacyTable = () => {
                           </div>
                         </div>
                       )}
+
                     </div>
                   </div>
                 </div>

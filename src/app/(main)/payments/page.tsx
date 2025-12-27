@@ -19,15 +19,26 @@ import { useCSVDownload } from '../../../hooks/useCSVDownload';
 import { useDownloadPDF } from '../../../hooks/useDownloadPDF';
 import { useDownloadXlShit } from '../../../hooks/useDownloadXlShit';
 
-// Payment interface তৈরি করুন
+// Payment interface with userId
+interface UserId {
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+  email?: string;
+
+}
+
 interface Payment {
   _id: string;
   transactionId: string;
-  email?: string; // Optional because it might not always exist
+  email?: string;
+  name?: string;
+  phone?: string;
   method: string;
   amount: number;
   transactionDate: string;
   status: string;
+  userId?: UserId; // Add userId property
 }
 
 // Status mapping from API to UI
@@ -35,13 +46,13 @@ const statusMap: Record<string, 'Successful' | 'Failed' | 'Refunded'> = {
   'paid': 'Successful',
   'failed': 'Failed',
   'refunded': 'Refunded',
-  'pending': 'Failed', // Map pending as failed for UI purposes
+  'pending': 'Failed',
   // Add other status mappings as needed
 };
 
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
+  return date.toLocaleDateString('en-GB');
 };
 
 const formatCurrency = (amount: number): string => {
@@ -69,10 +80,11 @@ export default function TransactionsList() {
 
   // Filter payments
   const filteredPayments = useMemo(() => {
-    return payments.filter((payment: Payment) => { // এখানে type specify করুন
+    return payments.filter((payment: Payment) => {
       const matchesSearch = searchQuery === '' ||
         payment.transactionId.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (payment.email?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+        (payment.userId?.email?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
         payment._id.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesStatus = statusFilter === 'all' ||
@@ -105,8 +117,6 @@ export default function TransactionsList() {
       return matchesSearch && matchesStatus && matchesDate;
     });
   }, [payments, searchQuery, statusFilter, dateRange]);
-
-  console.log("filteredPayments", filteredPayments)
 
   // Pagination
   const totalPages = Math.ceil(filteredPayments.length / ITEMS_PER_PAGE);
@@ -157,7 +167,7 @@ export default function TransactionsList() {
   const handleExportCSV = () => {
     const dataToExport = filteredPayments.map((payment: Payment) => ({
       TransactionID: payment.transactionId || payment._id,
-      Email: payment.email || 'N/A',
+      Email: payment.userId?.email || payment.email || 'N/A',
       Method: payment.method,
       Amount: formatCurrency(payment.amount),
       Date: formatDate(payment.transactionDate),
@@ -172,7 +182,7 @@ export default function TransactionsList() {
   const handleExportPDF = () => {
     const dataToExport = filteredPayments.map((payment: Payment) => ({
       TransactionID: payment.transactionId || payment._id,
-      Email: payment.email || 'N/A',
+      Email: payment.userId?.email || payment.email || 'N/A',
       Method: payment.method,
       Amount: formatCurrency(payment.amount),
       Date: formatDate(payment.transactionDate),
@@ -187,7 +197,7 @@ export default function TransactionsList() {
   const handleExportXL = () => {
     const dataToExport = filteredPayments.map((payment: Payment) => ({
       TransactionID: payment.transactionId || payment._id,
-      Email: payment.email || 'N/A',
+      Email: payment.userId?.email || payment.email || 'N/A',
       Method: payment.method,
       Amount: formatCurrency(payment.amount),
       Date: formatDate(payment.transactionDate),
@@ -199,16 +209,23 @@ export default function TransactionsList() {
     downloadExcel(dataToExport, 'transactions-data');
   };
 
+  const getFullName = (payment: Payment): string => {
+    if (!payment.userId) return 'N/A';
+    const firstName = payment.userId.first_name || '';
+    const lastName = payment.userId.last_name || '';
+    const name = `${firstName} ${lastName}`.trim();
+    return name || 'N/A';
+  };
+
   if (isLoading) {
-    return (
-      <CustomLoading />
-    );
+    return <CustomLoading />;
   }
 
   if (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Error loading transactions. Please try again.';
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-lg text-red-600">Error loading transactions. Please try again.</div>
+        <div className="text-lg text-red-600">{errorMessage}</div>
       </div>
     );
   }
@@ -222,13 +239,13 @@ export default function TransactionsList() {
             <h1 className="text-2xl font-semibold text-gray-900">Transactions list</h1>
             <div className="flex gap-2">
               <Button onClick={handleExportCSV} variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
-                <Image src="/icons/refill-prescription/csv.png" alt="CSV Export" width={28} height={28} />
+                <Image src="/icons/refill-prescription/csv.png" alt="CSV Export" width={28} height={28} unoptimized />
               </Button>
               <Button onClick={handleExportXL} variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
-                <Image src="/icons/refill-prescription/docs.png" alt="Document Export" width={28} height={28} />
+                <Image src="/icons/refill-prescription/docs.png" alt="Document Export" width={28} height={28} unoptimized />
               </Button>
               <Button onClick={handleExportPDF} variant="outline" size="icon" className="h-11 w-11 bg-gray-100 hover:bg-gray-100 border-gray-200">
-                <Image src="/icons/refill-prescription/pdf.png" alt="PDF Export" width={28} height={28} className='w-8 h-8' />
+                <Image src="/icons/refill-prescription/pdf.png" alt="PDF Export" width={28} height={28} className='w-8 h-8' unoptimized />
               </Button>
             </div>
           </div>
@@ -275,6 +292,8 @@ export default function TransactionsList() {
             <thead>
               <tr className="bg-gray-50 border-b">
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Transaction ID</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Name</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Number</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Method</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Amount</th>
@@ -289,7 +308,9 @@ export default function TransactionsList() {
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
                       {payment.transactionId || `#${payment._id.substring(0, 8)}`}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{payment.email || 'N/A'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{getFullName(payment)}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{payment.userId?.phone || 'N/A'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{payment.userId?.email || payment.email || 'N/A'}</td>
                     <td className="px-6 py-4 text-sm text-gray-600 capitalize">{payment.method}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{formatCurrency(payment.amount)}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{formatDate(payment.transactionDate)}</td>
@@ -302,7 +323,7 @@ export default function TransactionsList() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
                     No transactions found
                   </td>
                 </tr>
@@ -329,10 +350,10 @@ export default function TransactionsList() {
 
             {renderPageNumbers().map((page, index) => (
               page === '...' ? (
-                <span key={index} className="px-3 py-2 text-gray-400">...</span>
+                <span key={`ellipsis-${index}`} className="px-3 py-2 text-gray-400">...</span>
               ) : (
                 <Button
-                  key={index}
+                  key={`page-${page}`}
                   variant={currentPage === page ? "default" : "ghost"}
                   onClick={() => typeof page === 'number' && setCurrentPage(page)}
                   className={currentPage === page ? "bg-purple-600 hover:bg-purple-700 text-white" : "text-gray-600"}

@@ -317,6 +317,7 @@ export default function BlogManagementApp() {
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [description, setDescription] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
+  console.log("image file", imageFile)
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const blogs = blogsData?.data?.data || [];
@@ -416,7 +417,7 @@ export default function BlogManagementApp() {
         if (imageFile) {
           const formData = new FormData();
           formData.append('title', title.trim());
-          formData.append('date', format(date, 'MM--dd-yyyy'));
+          formData.append('date', format(date,'MM--dd-yyyy'));
           formData.append('description', description.trim());
           formData.append('image', imageFile);
 

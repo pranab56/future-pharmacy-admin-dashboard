@@ -7,11 +7,9 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 
-
 import { PharmacyFormData } from '.';
 import PharmacyForm from './PharmacyForm';
 
-// Omit ব্যবহার না করে সব properties include করুন
 interface CreatePharmacyDialogProps {
   isAddDialogOpen: boolean;
   setIsAddDialogOpen: (open: boolean) => void;

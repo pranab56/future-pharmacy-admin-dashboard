@@ -8,6 +8,8 @@ export interface Pharmacy {
   contactPerson: string;
   title: string;
   yearofBusiness: string;
+  businessPhoneNumber: string;
+  licenseNumber: string;
   message: string;
   status: string;
   latitude: number;
@@ -24,6 +26,8 @@ export interface PharmacyFormData {
   contactPerson: string;
   title: string;
   yearofBusiness: string;
+  licenseNumber: string;
+  businessPhoneNumber: string;
   message: string;
   status: string;
   latitude: string;

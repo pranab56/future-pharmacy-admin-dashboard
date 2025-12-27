@@ -27,6 +27,7 @@ import { CustomLoading } from '../../../hooks/CustomLoading';
 import { useCSVDownload } from '../../../hooks/useCSVDownload';
 import { useDownloadPDF } from '../../../hooks/useDownloadPDF';
 import { useDownloadXlShit } from '../../../hooks/useDownloadXlShit';
+import { baseURL } from '../../../utils/BaseURL';
 
 // Tab Component Props
 interface TabsProps {
@@ -95,6 +96,8 @@ interface Pharmacy {
   contactPerson: string;
   title: string;
   yearofBusiness: string;
+  businessPhoneNumber: string;
+  licenseNumber: string;
   message: string;
   status: string;
   latitude: number;
@@ -189,7 +192,7 @@ const ViewDetailsDialog = ({ type, data, children }: ViewDetailsDialogProps) => 
                 {(data as Pharmacy).logo && (
                   <div className="w-20 h-20 rounded-lg overflow-hidden border">
                     <Image
-                      src={`/${(data as Pharmacy).logo}`}
+                      src={`${baseURL}/${(data as Pharmacy).logo}`}
                       alt={(data as Pharmacy).name}
                       width={80}
                       height={80}
@@ -219,6 +222,14 @@ const ViewDetailsDialog = ({ type, data, children }: ViewDetailsDialogProps) => 
                 <div>
                   <p className="text-sm font-medium text-gray-500">Year of Business</p>
                   <p className="text-sm">{(data as Pharmacy).yearofBusiness}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Bessiness Phone Number</p>
+                  <p className="text-sm">{(data as Pharmacy).businessPhoneNumber || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">License Number</p>
+                  <p className="text-sm">{(data as Pharmacy).licenseNumber || 'N/A'}</p>
                 </div>
                 <div className="col-span-2">
                   <p className="text-sm font-medium text-gray-500">Address</p>
@@ -435,6 +446,7 @@ const PharmacyTab = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email Address</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact Person</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                 </tr>
               </thead>
@@ -444,10 +456,11 @@ const PharmacyTab = () => {
                     <tr key={item._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{index + 1}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">N/A</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.licenseNumber || 'N/A'}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.email}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.address}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.contactPerson}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.status}</td>
                       <td className="px-6">
                         <ViewDetailsDialog type="pharmacy" data={item}>
                           <button
@@ -561,7 +574,8 @@ const DriverTab = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email Address</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driving License</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driving License Year</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                 </tr>
               </thead>
@@ -578,6 +592,7 @@ const DriverTab = () => {
                           {item.yearOfDriverLicense}
                         </div>
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize">{item.status}</td>
                       <td className="px-6">
                         <ViewDetailsDialog type="driver" data={item}>
                           <button
@@ -692,6 +707,7 @@ const InvestorTab = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Investor Name</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company Name</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email Address</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                 </tr>
               </thead>
@@ -703,6 +719,7 @@ const InvestorTab = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.name}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.organizationName}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.email}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.status}</td>
                       <td className="px-6">
                         <ViewDetailsDialog type="investor" data={item}>
                           <button

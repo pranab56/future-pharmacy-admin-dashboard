@@ -138,6 +138,7 @@ export default function UserManagement() {
   const itemsPerPage = 10;
 
   const { data, isLoading, refetch } = useGetAllUsersQuery({});
+
   const { data: userDetailsData, isLoading: userDetailsLoading } = useViewUserDetailsQuery(
     selectedUserId || '',
     { skip: !selectedUserId }
@@ -603,8 +604,8 @@ export default function UserManagement() {
                         <div className="flex items-center gap-3">
                           <Clock size={18} className="text-gray-400" />
                           <div>
-                            <p className="text-sm text-gray-500">Last Updated</p>
-                            <p className="font-medium">{formatDate(userDetailsData.data.updatedAt)}</p>
+                            <p className="text-sm text-gray-500">Date of Birth</p>
+                            <p className="font-medium">{userDetailsData.data.dateOfBirth ? userDetailsData.data.dateOfBirth : 'N/A'}</p>
                           </div>
                         </div>
                       </div>

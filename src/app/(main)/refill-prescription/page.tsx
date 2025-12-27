@@ -534,6 +534,7 @@ export default function RefillPrescriptionRequests() {
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Prescription</th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Pharmacy Name</th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Date</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Status</th>
                 {/* <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Status</th> */}
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Action</th>
               </tr>
@@ -547,6 +548,7 @@ export default function RefillPrescriptionRequests() {
                     <td className="px-6 py-4 text-sm text-gray-900">{item.prescription}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{item.pharmacyName}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{item.date}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.status}</td>
                     {/* <td className="px-6 py-4">
                       <Badge
                         variant="secondary"

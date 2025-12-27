@@ -1,17 +1,10 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { PharmacyFormProps } from '.';
 
 
-const PharmacyForm = ({ formData, handleInputChange, handleFileChange, setFormData }: PharmacyFormProps) => (
+const PharmacyForm = ({ formData, handleInputChange, handleFileChange }: PharmacyFormProps) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div className="space-y-2">
       <Label htmlFor="name">Pharmacy Name *</Label>
@@ -98,21 +91,18 @@ const PharmacyForm = ({ formData, handleInputChange, handleFileChange, setFormDa
       />
     </div>
 
-    <div className="space-y-2 w-full">
-      <Label htmlFor="status">Status *</Label>
-      <Select
-        value={formData.status}
-        onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
-      >
-        <SelectTrigger className='w-full'>
-          <SelectValue placeholder="Select status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="pending">Pending</SelectItem>
-          <SelectItem value="approved">Approved</SelectItem>
-          <SelectItem value="rejected">Rejected</SelectItem>
-        </SelectContent>
-      </Select>
+    <div className="space-y-2">
+      <Label htmlFor="businessPhoneNumber">Business Number *</Label>
+      <Input
+        id="businessPhoneNumber"
+        name="businessPhoneNumber"
+        type="number"
+        step="any"
+        value={formData.businessPhoneNumber}
+        onChange={handleInputChange}
+        placeholder="Enter Business Number"
+        required
+      />
     </div>
 
     <div className="space-y-2">
@@ -143,6 +133,31 @@ const PharmacyForm = ({ formData, handleInputChange, handleFileChange, setFormDa
       />
     </div>
 
+    <div className="space-y-2">
+      <Label htmlFor="logo">Logo</Label>
+      <Input
+        id="logo"
+        name="logo"
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+      />
+    </div>
+
+    <div className="space-y-2">
+      <Label htmlFor="licenseNumber">Licence Number *</Label>
+      <Input
+        id="licenseNumber"
+        name="licenseNumber"
+        type="text"
+        step="any"
+        value={formData.licenseNumber}
+        onChange={handleInputChange}
+        placeholder="Enter License Number"
+        required
+      />
+    </div>
+
     <div className="space-y-2 md:col-span-2">
       <Label htmlFor="message">Message</Label>
       <Textarea
@@ -155,16 +170,7 @@ const PharmacyForm = ({ formData, handleInputChange, handleFileChange, setFormDa
       />
     </div>
 
-    <div className="space-y-2 md:col-span-2">
-      <Label htmlFor="logo">Logo</Label>
-      <Input
-        id="logo"
-        name="logo"
-        type="file"
-        accept="image/*"
-        onChange={handleFileChange}
-      />
-    </div>
+
   </div>
 );
 

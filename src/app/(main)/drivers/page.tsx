@@ -231,7 +231,7 @@ export default function AllDriverList() {
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Driver ID</th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Driver Name</th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Contact</th>
-                  {/* <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Status</th> */}
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Status</th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Action</th>
                 </tr>
               </thead>
@@ -248,14 +248,7 @@ export default function AllDriverList() {
                       <td className="px-6 py-4 text-sm text-gray-900">{getDriverId(driver._id)}</td>
                       <td className="px-6 py-4 text-sm text-gray-900">{driver.name}</td>
                       <td className="px-6 py-4 text-sm text-gray-900">{driver.phone}</td>
-                      {/* <td className="px-6 py-4">
-                        <Badge
-                          variant="secondary"
-                          className={getStatusBadgeClass(driver.status)}
-                        >
-                          {formatStatus(driver.status)}
-                        </Badge>
-                      </td> */}
+                      <td className="px-6 py-4 text-sm text-gray-900">{driver.status}</td>
                       <td className="px-6 py-4">
                         <button
                           onClick={() => handleViewDetails(driver._id)}

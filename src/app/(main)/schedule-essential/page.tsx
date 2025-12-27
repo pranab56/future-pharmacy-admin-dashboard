@@ -677,8 +677,7 @@ export default function HealthcareSchedule() {
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Pharmacy Name</th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Service Type</th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Scheduled Date</th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Assigned Driver</th>
-                {/* <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Status</th> */}
+                <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Status</th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">Action</th>
               </tr>
             </thead>
@@ -708,7 +707,7 @@ export default function HealthcareSchedule() {
                         <span className="text-xs text-gray-500">Requested: {item.requestDate}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{item.assignedDriver}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{item.status}</td>
                     {/* <td className="px-6 py-4">
                       <Badge
                         variant="secondary"

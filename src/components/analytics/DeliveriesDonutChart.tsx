@@ -21,9 +21,11 @@ interface COLORS_TYPE {
   [key: string]: string;
 }
 
+// Added "Failed" color to COLORS object
 const COLORS: COLORS_TYPE = {
   Completed: "#75D1A4",
   Pending: "#FCCA80",
+  Failed: "#FF6B6B", // Added color for Failed status
 };
 
 interface CustomLabelProps {
@@ -33,6 +35,8 @@ interface CustomLabelProps {
   innerRadius?: number;
   outerRadius?: number;
   percent?: number;
+  index?: number;
+  value?: number;
 }
 
 interface LegendPayloadItem {
@@ -60,15 +64,25 @@ function DeliveriesDonutChart() {
   // Extract data from API response with fallback to 0
   const pending = data?.data?.orderPending || 0;
   const completed = data?.data?.orderComplete || 0;
+  const failed = data?.data?.orderCancelled || 0;
 
-  // Create delivery data from API response
+  // Create delivery data from API response - Added Failed status
+  // Filter out categories with 0 value for better visualization
   const deliveryData: DeliveryData[] = [
     { name: "Completed", value: completed },
     { name: "Pending", value: pending },
+    { name: "Failed", value: failed },
+  ].filter(item => item.value > 0); // Only show categories with values > 0
+
+  // But for legend, we want to show all categories even if 0
+  const allCategories = [
+    { name: "Completed", value: completed },
+    { name: "Pending", value: pending },
+    { name: "Failed", value: failed },
   ];
 
   const renderCustomizedLabel: PieLabel = (props: CustomLabelProps) => {
-    const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props;
+    const { cx, cy, midAngle, innerRadius, outerRadius, percent,value } = props;
 
     // Add null checks for all required values
     if (
@@ -77,10 +91,15 @@ function DeliveriesDonutChart() {
       midAngle === undefined ||
       innerRadius === undefined ||
       outerRadius === undefined ||
-      percent === undefined
+      percent === undefined ||
+      value === undefined ||
+      value === 0
     ) {
       return null;
     }
+
+    // Only show label if value > 0
+    if (value === 0) return null;
 
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * (Math.PI / 180));
@@ -110,15 +129,15 @@ function DeliveriesDonutChart() {
     }
 
     return (
-      <div className="flex items-center justify-center gap-6 mt-6">
-        {payload.map((entry, index: number) => (
+      <div className="flex flex-wrap items-center justify-center gap-6 mt-6">
+        {allCategories.map((category, index: number) => (
           <div key={`legend-${index}`} className="flex items-center gap-2">
             <span
               className="inline-block w-3 h-3 rounded-full"
-              style={{ backgroundColor: entry.color }}
+              style={{ backgroundColor: COLORS[category.name] }}
             />
             <span className="text-sm font-medium text-gray-700">
-              {entry.value}
+              {category.name} {category.value > 0 ? `(${category.value})` : '(0)'}
             </span>
           </div>
         ))}
@@ -153,7 +172,7 @@ function DeliveriesDonutChart() {
     return (
       <Card className="h-full p-6 flex flex-col gap-4">
         <h1 className="text-xl font-semibold">
-          Pending vs. Completed Deliveries
+          Pending vs. Completed vs. Failed Deliveries
         </h1>
         <div className="w-full h-[500px] flex items-center justify-center">
           <LoadingFc />
@@ -163,13 +182,15 @@ function DeliveriesDonutChart() {
   }
 
   // Check if there's any data to display
-  const totalOrders = pending + completed;
+  // Include failed orders in the total for checking if data exists
+  const totalOrders = pending + completed + failed;
   const hasData = totalOrders > 0;
 
   return (
     <Card className="h-full p-6 flex flex-col gap-4">
+      {/* Updated title to include "Failed" */}
       <h1 className="text-xl font-semibold">
-        Pending vs. Completed Deliveries
+        Delivery Status Overview
       </h1>
       <div className="w-full h-[500px]">
         {hasData ? (
@@ -185,16 +206,18 @@ function DeliveriesDonutChart() {
                 innerRadius={80}
                 fill="#8884d8"
                 dataKey="value"
-                strokeWidth={0}
+                strokeWidth={2}
+                stroke="#ffffff"
                 startAngle={90}
                 endAngle={-270}
-                paddingAngle={0}
+                paddingAngle={deliveryData.length > 1 ? 2 : 0} // Add padding only if more than 1 segment
               >
                 {deliveryData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
-                    fill={COLORS[entry.name]}
-                    stroke="none"
+                    fill={COLORS[entry.name] || "#D1D5DB"}
+                    stroke="#ffffff"
+                    strokeWidth={2}
                   />
                 ))}
               </Pie>
@@ -204,8 +227,38 @@ function DeliveriesDonutChart() {
           </ResponsiveContainer>
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center">
-            <p className="text-gray-500 text-lg mb-4">No delivery data available</p>
-            <p className="text-gray-400 text-sm">Add orders to see pending vs. completed deliveries</p>
+            <div className="relative w-64 h-64">
+              {/* Empty donut chart visualization */}
+              <svg width="100%" height="100%" viewBox="0 0 100 100" className="absolute inset-0">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="40"
+                  fill="transparent"
+                  stroke="#E5E7EB"
+                  strokeWidth="20"
+                  strokeDasharray="251.2"
+                  strokeDashoffset="0"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <p className="text-gray-400 text-lg font-medium">No Data</p>
+                <p className="text-gray-300 text-sm">No delivery data available</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-6 mt-6">
+              {allCategories.map((category, index: number) => (
+                <div key={`empty-legend-${index}`} className="flex items-center gap-2">
+                  <span
+                    className="inline-block w-3 h-3 rounded-full"
+                    style={{ backgroundColor: COLORS[category.name] }}
+                  />
+                  <span className="text-sm font-medium text-gray-400">
+                    {category.name} (0)
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

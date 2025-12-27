@@ -72,7 +72,7 @@ interface TransferRequest {
 // Transformed data interface
 interface TransformedTransferRequest {
   _id: string;
-  no: string;
+  transId: string;
   patientName: string;
   transferFrom: string;
   transferTo: string;
@@ -160,9 +160,9 @@ export default function PrescriptionTransferRequests() {
   const apiData = useMemo<TransformedTransferRequest[]>(() => {
     if (!data || !data.data) return [];
 
-    return data.data.map((item: TransferRequest, index: number) => ({
+    return data.data.map((item: TransferRequest) => ({
       _id: item._id,
-      no: String(index + 1).padStart(2, '0'), // Serial number with leading zero
+      transId: `Trans-${item._id.slice(-4).toUpperCase()}`,
       patientName: getPatientName(item.personalInfo),
       transferFrom: item.pharmacyInfo.name,
       transferTo: item.pharmacyInfo.newPharmacyName,
@@ -249,7 +249,7 @@ export default function PrescriptionTransferRequests() {
   // Handle export functions
   const handleExportCSV = () => {
     const dataToExport = filteredData.map(request => ({
-      No: request.no,
+      transId: request.transId,
       PatientName: request.patientName,
       TransferFrom: request.transferFrom,
       TransferTo: request.transferTo,
@@ -264,7 +264,7 @@ export default function PrescriptionTransferRequests() {
 
   const handleExportDocs = () => {
     const dataToExport = filteredData.map(request => ({
-      No: request.no,
+      transId: request.transId,
       PatientName: request.patientName,
       TransferFrom: request.transferFrom,
       TransferTo: request.transferTo,
@@ -279,7 +279,7 @@ export default function PrescriptionTransferRequests() {
 
   const handleExportPDF = () => {
     const dataToExport = filteredData.map(request => ({
-      No: request.no,
+      transId: request.transId,
       PatientName: request.patientName,
       TransferFrom: request.transferFrom,
       TransferTo: request.transferTo,
@@ -547,6 +547,7 @@ export default function PrescriptionTransferRequests() {
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Transfer To</th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">RX ID</th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Date</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Status</th>
                   {/* <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Status</th> */}
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Action</th>
                 </tr>
@@ -555,7 +556,7 @@ export default function PrescriptionTransferRequests() {
                 {currentData.length > 0 ? (
                   currentData.map((item: TransformedTransferRequest) => (
                     <tr key={item._id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900">{item.no}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900">{item.transId}</td>
                       <td className="px-6 py-4 text-sm text-gray-900">{item.patientName}</td>
                       <td className="px-6 py-4 text-sm text-gray-900">{item.transferFrom}</td>
                       <td className="px-6 py-4 text-sm text-gray-900">{item.transferTo}</td>
@@ -568,6 +569,7 @@ export default function PrescriptionTransferRequests() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">{item.date}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900">{item.status}</td>
                       {/* <td className="px-6 py-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${item.status === 'pending'
                           ? 'bg-yellow-100 text-yellow-800'

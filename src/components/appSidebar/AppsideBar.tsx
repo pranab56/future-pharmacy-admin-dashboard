@@ -100,14 +100,14 @@ export default function OptimusSidebar() {
           <SidebarGroup>
             {/* Logo Section */}
             <div className="flex flex-col items-center justify-center px-6 pt-8 pb-6 sticky top-0 bg-[#9c4a8f] z-10">
-              <div className="relative w-full max-w-[180px] h-[60px]">
+              <div className="relative w-full max-w-[180px] h-[70px]">
                 <Image
-                  src="/icons/logo.png"
+                  src="/icons/logo3.png"
                   alt="Dashboard Logo"
                   fill
                   className="object-contain"
                   priority
-                  sizes="(max-width: 768px) 100px, 180px"
+                  sizes="(max-width: 768px) 100px, 500px"
                 />
               </div>
             </div>

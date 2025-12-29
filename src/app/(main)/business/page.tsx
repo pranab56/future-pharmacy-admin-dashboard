@@ -23,6 +23,7 @@ import { Button } from '../../../components/ui/button';
 import { useGetAllDriverQuery } from '../../../features/driver/driverApi';
 import { useGetAllPharmacyQuery } from "../../../features/fharmacy/fharmacyApi";
 import { useGetAllInvestorsQuery } from "../../../features/investor/investorApi";
+import { useGetAllOtherBussinessQuery } from "../../../features/other/otherAPi";
 import { CustomLoading } from '../../../hooks/CustomLoading';
 import { useCSVDownload } from '../../../hooks/useCSVDownload';
 import { useDownloadPDF } from '../../../hooks/useDownloadPDF';
@@ -69,6 +70,24 @@ interface Investor {
   status: string;
   createdAt: string;
   updatedAt: string;
+}
+
+
+interface OtherBussiness {
+  _id: string;
+  name: string;
+  phone: string;
+  email: string;
+  organizationName: string;
+  organizationType: string;
+  region: string;
+  website: string;
+  yearOfInvestmentExperience: string;
+  message: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  organizationWebsite: string;
 }
 
 interface Driver {
@@ -160,8 +179,8 @@ const TabsContent = ({ children, tabValue, value }: TabsContentProps) => {
 
 // View Details Dialog Component
 interface ViewDetailsDialogProps {
-  type: 'pharmacy' | 'driver' | 'investor';
-  data: Pharmacy | Driver | Investor | null;
+  type: 'pharmacy' | 'driver' | 'investor' | "other Bussiness";
+  data: Pharmacy | Driver | Investor | OtherBussiness | null;
   children: ReactNode;
 }
 
@@ -364,6 +383,63 @@ const ViewDetailsDialog = ({ type, data, children }: ViewDetailsDialogProps) => 
               <div>
                 <p className="text-sm font-medium text-gray-500">Message</p>
                 <p className="text-sm mt-1 p-3 bg-gray-50 rounded">{(data as Investor).message}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Created At</p>
+                  <p className="text-sm">{new Date(data.createdAt).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Updated At</p>
+                  <p className="text-sm">{new Date(data.updatedAt).toLocaleDateString()}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          {type === 'other Bussiness' && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold">{(data as OtherBussiness).name}</h3>
+                <p className="text-sm text-gray-500">{(data as OtherBussiness).email}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Organization</p>
+                  <p className="text-sm">{(data as OtherBussiness).organizationName}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Organization Type</p>
+                  <p className="text-sm">{(data as OtherBussiness).organizationType}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Phone</p>
+                  <p className="text-sm">{(data as OtherBussiness).phone}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Website</p>
+                  <p className="text-sm">
+                    <a href={(data as OtherBussiness).organizationWebsite} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                      {(data as OtherBussiness).organizationWebsite}
+                    </a>
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Region</p>
+                  <p className="text-sm">{(data as OtherBussiness).region}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Status</p>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${data.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                    {data.status}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-gray-500">Message</p>
+                <p className="text-sm mt-1 p-3 bg-gray-50 rounded">{(data as OtherBussiness).message}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -760,6 +836,140 @@ const InvestorTab = () => {
   );
 };
 
+// Other Business Component
+const OtherTab = () => {
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [dateRange, setDateRange] = useState<string>('');
+  const [status, setStatus] = useState<string>('all');
+
+  const { data: otherBusinessResponse, isLoading } = useGetAllOtherBussinessQuery({});
+
+  // Filter other business data based on search and status
+  const filteredOtherBusinessData = otherBusinessResponse?.data?.filter((business: OtherBussiness) => {
+    const matchesSearch = searchTerm === '' ||
+      business.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      business.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      business.phone.includes(searchTerm) ||
+      business.organizationName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      business.region.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus = status === 'all' || business.status === status;
+
+    return matchesSearch && matchesStatus;
+  }) || [];
+
+  return (
+    <div>
+      <div className="flex gap-4 mb-6">
+        <div className="flex-1 relative w-6/12">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
+            placeholder="Search by name, email, organization, phone, or region"
+            value={searchTerm}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <div className='w-3/12'>
+          <Select value={dateRange} onValueChange={setDateRange}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Date Range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="week">This Week</SelectItem>
+              <SelectItem value="month">This Month</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className='w-3/12'>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Status: All" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="approved">Approved</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <CustomLoading />
+      ) : (
+        <>
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organization</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email Address</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Region</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organization Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredOtherBusinessData.length > 0 ? (
+                  filteredOtherBusinessData.map((item: OtherBussiness, index: number) => (
+                    <tr key={item._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{index + 1}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.organizationName}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.email}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.region}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.organizationType}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${item.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                          {item.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <ViewDetailsDialog type="other Bussiness" data={item}>
+                          <button
+                            className="p-1 hover:bg-gray-100 cursor-pointer rounded transition-colors"
+                            title="View details"
+                          >
+                            <Image
+                              src="/icons/users/view.png"
+                              alt="view details"
+                              width={20}
+                              height={20}
+                              className="opacity-70 hover:opacity-100"
+                            />
+                          </button>
+                        </ViewDetailsDialog>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                      No other business data found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex items-center justify-between mt-4">
+            <div className="text-sm text-gray-700">
+              Showing {filteredOtherBusinessData.length} of {otherBusinessResponse?.meta?.total || 0} entries
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 // Main App Component
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('pharmacy');
@@ -768,6 +978,7 @@ export default function App() {
   const { data: pharmacyResponse } = useGetAllPharmacyQuery({});
   const { data: driverResponse } = useGetAllDriverQuery({});
   const { data: investorResponse } = useGetAllInvestorsQuery({});
+  const { data: otherBusinessResponse } = useGetAllOtherBussinessQuery({});
 
   const { downloadCSV } = useCSVDownload();
   const { downloadPDF } = useDownloadPDF();
@@ -927,6 +1138,57 @@ export default function App() {
     downloadExcel(dataToExport, 'investor-data');
   };
 
+  const handleExportOtherBusinessCSV = () => {
+    const otherBusinessData = otherBusinessResponse?.data || [];
+    const dataToExport = otherBusinessData.map((business: OtherBussiness) => ({
+      BusinessID: business._id,
+      Name: business.name,
+      Email: business.email,
+      Phone: business.phone,
+      OrganizationName: business.organizationName,
+      OrganizationType: business.organizationType,
+      Website: business.organizationWebsite,
+      Region: business.region,
+      Status: business.status,
+      CreatedAt: new Date(business.createdAt).toLocaleDateString(),
+    }));
+    downloadCSV(dataToExport, 'other-business-data');
+  };
+
+  const handleExportOtherBusinessPDF = () => {
+    const otherBusinessData = otherBusinessResponse?.data || [];
+    const dataToExport = otherBusinessData.map((business: OtherBussiness) => ({
+      BusinessID: business._id,
+      Name: business.name,
+      Email: business.email,
+      Phone: business.phone,
+      OrganizationName: business.organizationName,
+      OrganizationType: business.organizationType,
+      Website: business.organizationWebsite,
+      Region: business.region,
+      Status: business.status,
+      CreatedAt: new Date(business.createdAt).toLocaleDateString(),
+    }));
+    downloadPDF(dataToExport, 'other-business-data');
+  };
+
+  const handleExportOtherBusinessExcel = () => {
+    const otherBusinessData = otherBusinessResponse?.data || [];
+    const dataToExport = otherBusinessData.map((business: OtherBussiness) => ({
+      BusinessID: business._id,
+      Name: business.name,
+      Email: business.email,
+      Phone: business.phone,
+      OrganizationName: business.organizationName,
+      OrganizationType: business.organizationType,
+      Website: business.organizationWebsite,
+      Region: business.region,
+      Status: business.status,
+      CreatedAt: new Date(business.createdAt).toLocaleDateString(),
+    }));
+    downloadExcel(dataToExport, 'other-business-data');
+  };
+
   const handleDownloadCsv = () => {
     if (activeTab === 'pharmacy') {
       handleExportPharmacyCSV();
@@ -934,6 +1196,8 @@ export default function App() {
       handleExportDriverCSV();
     } else if (activeTab === 'investor') {
       handleExportInvestorCSV();
+    } else if (activeTab === 'other') {
+      handleExportOtherBusinessCSV();
     }
   };
 
@@ -944,6 +1208,8 @@ export default function App() {
       handleExportDriverPDF();
     } else if (activeTab === 'investor') {
       handleExportInvestorPDF();
+    } else if (activeTab === 'other') {
+      handleExportOtherBusinessPDF();
     }
   };
 
@@ -954,6 +1220,8 @@ export default function App() {
       handleExportDriverExcel();
     } else if (activeTab === 'investor') {
       handleExportInvestorExcel();
+    } else if (activeTab === 'other') {
+      handleExportOtherBusinessExcel();
     }
   };
 
@@ -973,6 +1241,9 @@ export default function App() {
                   </TabsTrigger>
                   <TabsTrigger tabValue="investor" value={activeTab} onValueChange={setActiveTab}>
                     Investor
+                  </TabsTrigger>
+                  <TabsTrigger tabValue="other" value={activeTab} onValueChange={setActiveTab}>
+                    Other Bussiness
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -999,6 +1270,9 @@ export default function App() {
             </TabsContent>
             <TabsContent tabValue="investor" value={activeTab}>
               <InvestorTab />
+            </TabsContent>
+            <TabsContent tabValue="other" value={activeTab}>
+              <OtherTab />
             </TabsContent>
           </Tabs>
         </div>
